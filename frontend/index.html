@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSI Demo - Identidad Digital Autosoberana</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0; min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2em; margin-bottom: 5px;
+             background: linear-gradient(90deg, #00d2ff, #928dab);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #928dab; margin-bottom: 30px; font-size: 0.95em; }
+        .card {
+            background: rgba(255,255,255,0.05); border-radius: 16px;
+            padding: 24px; margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .card h2 { color: #00d2ff; margin-bottom: 15px; font-size: 1.2em; }
+        .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8em; font-weight: bold;
+        }
+        .badge.owner { background: #00d2ff33; color: #00d2ff; }
+        .badge.viewer { background: #ff6b6b33; color: #ff6b6b; }
+        .badge.connected { background: #51cf6633; color: #51cf66; }
+        .badge.expired { background: #ff6b6b33; color: #ff6b6b; }
+        .badge.active { background: #51cf6633; color: #51cf66; }
+        input, button {
+            padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.95em;
+        }
+        input {
+            background: rgba(255,255,255,0.08); color: #fff; width: 100%;
+            margin-bottom: 10px;
+        }
+        input::placeholder { color: #666; }
+        button {
+            background: linear-gradient(135deg, #00d2ff, #7b68ee);
+            color: #fff; border: none; cursor: pointer;
+            font-weight: bold; transition: all 0.3s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,210,255,0.3); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        button.danger { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .row input { flex: 1; min-width: 200px; margin-bottom: 0; }
+        #status {
+            text-align: center; padding: 12px; border-radius: 10px;
+            margin-bottom: 20px; font-weight: bold;
+        }
+        .timer-ring {
+            width: 120px; height: 120px; margin: 20px auto; position: relative;
+        }
+        .timer-ring svg { transform: rotate(-90deg); }
+        .timer-ring circle {
+            fill: none; stroke-width: 8; stroke-linecap: round;
+        }
+        .timer-ring .bg { stroke: rgba(255,255,255,0.1); }
+        .timer-ring .progress { stroke: #00d2ff; transition: stroke-dashoffset 1s linear; }
+        .timer-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-size: 1.8em; font-weight: bold;
+        }
+        .data-reveal {
+            background: rgba(0,210,255,0.1); border: 2px solid #00d2ff;
+            border-radius: 12px; padding: 20px; text-align: center;
+            font-size: 1.3em; margin: 15px 0; animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .log {
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;
+            max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85em;
+        }
+        .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .log-entry .time { color: #928dab; }
+        .principles {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-top: 10px;
+        }
+        .principle {
+            background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.08);
+        }
+        .principle .icon { font-size: 1.5em; margin-bottom: 5px; }
+        .principle .label { font-size: 0.8em; color: #928dab; }
+        .hidden { display: none; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>SSI Access Control</h1>
+    <p class="subtitle">Demo de Identidad Digital Autosoberana en Ethereum Sepolia</p>
+
+    <!-- Principios SSI -->
+    <div class="card">
+        <h2>Principios SSI Demostrados</h2>
+        <div class="principles">
+            <div class="principle"><div class="icon">&#x1F464;</div><strong>Control del Titular</strong><div class="label">Solo el owner gestiona accesos</div></div>
+            <div class="principle"><div class="icon">&#x1F3AF;</div><strong>Divulgacion Selectiva</strong><div class="label">Solo direcciones autorizadas</div></div>
+            <div class="principle"><div class="icon">&#x23F1;</div><strong>Acceso Temporal</strong><div class="label">Ventana de 20 segundos</div></div>
+            <div class="principle"><div class="icon">&#x1F6AB;</div><strong>Revocabilidad</strong><div class="label">Revocar en cualquier momento</div></div>
+        </div>
+    </div>
+
+    <!-- Conexion -->
+    <div id="status">Conecta tu MetaMask para comenzar</div>
+    <div class="card">
+        <div class="flex-between">
+            <h2>Conexion</h2>
+            <div>
+                <span id="roleBadge" class="badge" style="display:none"></span>
+                <span id="connBadge" class="badge" style="display:none"></span>
+            </div>
+        </div>
+        <div class="row" style="margin-top:15px">
+            <input id="contractAddr" placeholder="Direccion del contrato desplegado en Sepolia">
+            <button onclick="connectWallet()">Conectar MetaMask</button>
+        </div>
+        <p id="accountInfo" style="margin-top:10px; font-size:0.85em; color:#928dab"></p>
+    </div>
+
+    <!-- Panel Owner -->
+    <div id="ownerPanel" class="card hidden">
+        <h2>Panel del Titular (Owner)</h2>
+
+        <div style="margin-bottom:15px">
+            <strong>Tu dato protegido:</strong>
+            <span id="ownerData" style="color:#51cf66">&mdash;</span>
+            <div class="row" style="margin-top:10px">
+                <input id="newData" placeholder="Nuevo dato personal">
+                <button onclick="updateData()">Actualizar Dato</button>
+            </div>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0">
+
+        <strong>Otorgar Acceso Temporal:</strong>
+        <div class="row" style="margin-top:10px">
+            <input id="grantAddr" placeholder="0x... direccion del verificador">
+            <input id="grantPurpose" placeholder="Proposito" style="max-width:200px">
+            <button onclick="grantAccess()">Otorgar (20s)</button>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0">
+
+        <strong>Revocar Acceso:</strong>
+        <div class="row" style="margin-top:10px">
+            <input id="revokeAddr" placeholder="0x... direccion a revocar">
+            <button class="danger" onclick="revokeAccess()">Revocar</button>
+        </div>
+    </div>
+
+    <!-- Panel Viewer -->
+    <div id="viewerPanel" class="card hidden">
+        <h2>Panel del Verificador</h2>
+        <div id="accessStatus"></div>
+        <div id="timerContainer" class="hidden">
+            <div class="timer-ring">
+                <svg width="120" height="120">
+                    <circle class="bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress" id="timerCircle" cx="60" cy="60" r="52"
+                        stroke-dasharray="326.73" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="timer-text" id="timerText">20</div>
+            </div>
+        </div>
+        <div id="revealedData" class="hidden"></div>
+        <button id="viewBtn" onclick="viewData()" style="margin-top:15px" disabled>
+            Ver Dato Protegido
+        </button>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+        <h2>Registro de Eventos</h2>
+        <div id="eventLog" class="log"><em>Los eventos apareceran aqui...</em></div>
+    </div>
+</div>
+
+<script>
+    // =============================================================
+    // ABI minimo del contrato
+    // =============================================================
+    const ABI = [
+        "function owner() view returns (address)",
+        "function defaultDuration() view returns (uint256)",
+        "function personalData() view returns (string)",
+        "function grantAccess(address _viewer, string _purpose)",
+        "function grantAccessCustom(address _viewer, uint256 _seconds, string _purpose)",
+        "function revokeAccess(address _viewer, string _reason)",
+        "function updatePersonalData(string _newData)",
+        "function viewData() returns (string)",
+        "function viewDataAsOwner() view returns (string)",
+        "function hasAccess(address _viewer) view returns (bool)",
+        "function remainingTime(address _viewer) view returns (uint256)",
+        "function getAccessDetails(address _viewer) view returns (bool,uint256,uint256,string,uint256)",
+        "event AccessGranted(address indexed viewer, uint256 expiresAt, string purpose)",
+        "event AccessRevoked(address indexed viewer, string reason)",
+        "event DataAccessed(address indexed viewer, uint256 timestamp)"
+    ];
+
+    let provider, signer, contract, account, isOwner = false;
+    let countdownInterval = null;
+
+    // =============================================================
+    // Conexion
+    // =============================================================
+    async function connectWallet() {
+        const contractAddress = document.getElementById('contractAddr').value.trim();
+        if (!contractAddress) { alert('Ingresa la direccion del contrato'); return; }
+        if (!window.ethereum) { alert('Instala MetaMask'); return; }
+
+        try {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            // Check we're on Sepolia (chainId 11155111 = 0xaa36a7)
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (chainId !== '0xaa36a7') {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0xaa36a7' }]
+                    });
+                } catch(e) { alert('Cambia a la red Sepolia en MetaMask'); return; }
+            }
+
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            account = await signer.getAddress();
+
+            contract = new ethers.Contract(contractAddress, ABI, signer);
+            const ownerAddr = await contract.owner();
+            isOwner = (account.toLowerCase() === ownerAddr.toLowerCase());
+
+            // UI
+            document.getElementById('status').textContent = 'Conectado a Sepolia';
+            document.getElementById('status').style.background = 'rgba(81,207,102,0.15)';
+            document.getElementById('accountInfo').textContent = 'Cuenta: ' + account;
+            document.getElementById('connBadge').textContent = 'Conectado';
+            document.getElementById('connBadge').className = 'badge connected';
+            document.getElementById('connBadge').style.display = 'inline-block';
+            document.getElementById('roleBadge').style.display = 'inline-block';
+
+            if (isOwner) {
+                document.getElementById('roleBadge').textContent = 'TITULAR';
+                document.getElementById('roleBadge').className = 'badge owner';
+                document.getElementById('ownerPanel').classList.remove('hidden');
+                document.getElementById('viewerPanel').classList.add('hidden');
+                loadOwnerData();
+            } else {
+                document.getElementById('roleBadge').textContent = 'VERIFICADOR';
+                document.getElementById('roleBadge').className = 'badge viewer';
+                document.getElementById('ownerPanel').classList.add('hidden');
+                document.getElementById('viewerPanel').classList.remove('hidden');
+                checkViewerAccess();
+            }
+
+            listenEvents();
+            addLog('Wallet conectada: ' + account.slice(0,8) + '...' + (isOwner ? ' (Titular)' : ' (Verificador)'));
+        } catch(e) {
+            console.error(e);
+            document.getElementById('status').textContent = 'Error: ' + e.message;
+            document.getElementById('status').style.background = 'rgba(255,107,107,0.15)';
+        }
+    }
+
+    // =============================================================
+    // Owner functions
+    // =============================================================
+    async function loadOwnerData() {
+        try {
+            const data = await contract.viewDataAsOwner();
+            document.getElementById('ownerData').textContent = data;
+        } catch(e) { console.error(e); }
+    }
+
+    async function updateData() {
+        const newData = document.getElementById('newData').value.trim();
+        if (!newData) return;
+        try {
+            const tx = await contract.updatePersonalData(newData);
+            addLog('Actualizando dato... tx: ' + tx.hash.slice(0,12));
+            await tx.wait();
+            addLog('Dato actualizado');
+            loadOwnerData();
+            document.getElementById('newData').value = '';
+        } catch(e) { addLog('Error: ' + e.message); }
+    }
+
+    async function grantAccess() {
+        const addr = document.getElementById('grantAddr').value.trim();
+        const purpose = document.getElementById('grantPurpose').value.trim() || 'Verificacion';
+        if (!addr) return;
+        try {
+            const tx = await contract.grantAccess(addr, purpose);
+            addLog('Otorgando acceso a ' + addr.slice(0,8) + '...');
+            await tx.wait();
+            addLog('Acceso otorgado por 20s a ' + addr.slice(0,8) + '...');
+            document.getElementById('grantAddr').value = '';
+            document.getElementById('grantPurpose').value = '';
+        } catch(e) { addLog('Error: ' + e.message); }
+    }
+
+    async function revokeAccess() {
+        const addr = document.getElementById('revokeAddr').value.trim();
+        if (!addr) return;
+        try {
+            const tx = await contract.revokeAccess(addr, 'Revocado por el titular');
+            addLog('Revocando acceso...');
+            await tx.wait();
+            addLog('Acceso revocado para ' + addr.slice(0,8) + '...');
+            document.getElementById('revokeAddr').value = '';
+        } catch(e) { addLog('Error: ' + e.message); }
+    }
+
+    // =============================================================
+    // Viewer functions
+    // =============================================================
+    async function checkViewerAccess() {
+        try {
+            const has = await contract.hasAccess(account);
+            const remaining = Number(await contract.remainingTime(account));
+            const statusEl = document.getElementById('accessStatus');
+            const viewBtn = document.getElementById('viewBtn');
+
+            if (has && remaining > 0) {
+                statusEl.innerHTML = '<span class="badge active">ACCESO ACTIVO</span> — ' + remaining + 's restantes';
+                viewBtn.disabled = false;
+                startCountdown(remaining);
+            } else {
+                statusEl.innerHTML = '<span class="badge expired">SIN ACCESO</span> — Solicita al titular que te otorgue permiso';
+                viewBtn.disabled = true;
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function viewData() {
+        try {
+            addLog('Solicitando dato...');
+            const data = await contract.viewData.staticCall();
+            document.getElementById('revealedData').innerHTML =
+                '<div class="data-reveal"><strong>' + data + '</strong></div>';
+            document.getElementById('revealedData').classList.remove('hidden');
+            addLog('Dato revelado exitosamente');
+        } catch(e) {
+            if (e.message.includes('expirado')) {
+                addLog('Acceso expirado');
+                document.getElementById('revealedData').innerHTML =
+                    '<div class="data-reveal" style="border-color:#ff6b6b;background:rgba(255,107,107,0.1)">Acceso expirado</div>';
+                document.getElementById('revealedData').classList.remove('hidden');
+            } else {
+                addLog('Error: ' + e.message);
+            }
+        }
+    }
+
+    function startCountdown(seconds) {
+        document.getElementById('timerContainer').classList.remove('hidden');
+        const circle = document.getElementById('timerCircle');
+        const text = document.getElementById('timerText');
+        const circumference = 326.73;
+        let remaining = seconds;
+
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        function update() {
+            text.textContent = remaining;
+            const offset = circumference * (1 - remaining / seconds);
+            circle.style.strokeDashoffset = offset;
+            if (remaining <= 5) circle.style.stroke = '#ff6b6b';
+            else circle.style.stroke = '#00d2ff';
+        }
+        update();
+
+        countdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                text.textContent = '0';
+                circle.style.strokeDashoffset = circumference;
+                document.getElementById('viewBtn').disabled = true;
+                document.getElementById('accessStatus').innerHTML =
+                    '<span class="badge expired">EXPIRADO</span>';
+                document.getElementById('revealedData').innerHTML =
+                    '<div class="data-reveal" style="border-color:#ff6b6b;background:rgba(255,107,107,0.1)">Tiempo agotado — dato protegido</div>';
+                document.getElementById('revealedData').classList.remove('hidden');
+                addLog('Acceso temporal expirado');
+            } else { update(); }
+        }, 1000);
+    }
+
+    // =============================================================
+    // Events
+    // =============================================================
+    function listenEvents() {
+        contract.on('AccessGranted', (viewer, expiresAt, purpose) => {
+            addLog('Acceso otorgado a ' + viewer.slice(0,8) + '... — "' + purpose + '"');
+            if (!isOwner) checkViewerAccess();
+        });
+        contract.on('AccessRevoked', (viewer, reason) => {
+            addLog('Acceso revocado: ' + viewer.slice(0,8) + '... — ' + reason);
+            if (!isOwner) checkViewerAccess();
+        });
+        contract.on('DataAccessed', (viewer, timestamp) => {
+            addLog('Dato accedido por ' + viewer.slice(0,8) + '...');
+        });
+    }
+
+    // =============================================================
+    // Utils
+    // =============================================================
+    function addLog(msg) {
+        const log = document.getElementById('eventLog');
+        const time = new Date().toLocaleTimeString();
+        if (log.querySelector('em')) log.innerHTML = '';
+        log.innerHTML = '<div class="log-entry"><span class="time">[' + time + ']</span> ' + msg + '</div>' + log.innerHTML;
+    }
+</script>
+
+<!-- ethers.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.min.js"></script>
+</body>
+</html>
