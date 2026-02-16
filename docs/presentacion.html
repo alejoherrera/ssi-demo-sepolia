@@ -539,10 +539,10 @@ const slides = [
 },
 {
     id: 'remix-open',
-    nav: 'Abrir Remix IDE',
+    nav: 'Clonar en Remix',
     section: 'Compilar & Deploy',
-    title: 'Paso 1: Abrir Remix IDE',
-    lead: 'Preparar el entorno de desarrollo',
+    title: 'Paso 1: Clonar el Repositorio en Remix IDE',
+    lead: 'Traer el codigo directamente desde GitHub',
     html: `
         <div class="step-box">
             <div class="step-num">1</div>
@@ -562,133 +562,47 @@ const slides = [
         <div class="step-box">
             <div class="step-num">2</div>
             <div class="step-content">
-                <strong>Crea un nuevo archivo</strong>
-                <p>En el panel izquierdo de Remix (File Explorer), haz click en el icono de <strong>"New File"</strong>
-                y nombralo <code>SSIAccessControl.sol</code></p>
+                <strong>Clona el repositorio desde GitHub</strong>
+                <p>En la pantalla de inicio de Remix (Home), busca la seccion <strong>"Clone a Git Repository"</strong> y pega la siguiente URL:</p>
             </div>
         </div>
 
-        <div class="screenshot">
-            <div class="ss-icon">&#x1F4C1;</div>
-            En Remix: File Explorer > click en "+" > escribir SSIAccessControl.sol
+        <div class="demo-area">
+            <h4>&#x1F4CB; URL del Repositorio</h4>
+            <div class="demo-row">
+                <input class="demo-input" id="repoUrl" value="https://github.com/alejoherrera/ssi-demo-sepolia.git" readonly style="cursor:pointer" onclick="this.select()">
+                <button class="demo-btn" onclick="copyRepoUrl()">Copiar</button>
+            </div>
+            <div class="demo-output" id="repoUrlOutput"><span style="color:var(--muted)">Copia esta URL y pegala en "Clone a Git Repository" en Remix</span></div>
         </div>
 
         <div class="step-box">
             <div class="step-num">3</div>
             <div class="step-content">
-                <strong>Copia el codigo del contrato</strong>
-                <p>Usa el boton de abajo para copiar el codigo completo y pegalo en Remix.</p>
+                <strong>Click en "Clone" y espera</strong>
+                <p>Remix descargara el repositorio completo. Veras la carpeta <code>contracts/</code> con el archivo <code>SSIAccessControl.sol</code> en el File Explorer.</p>
             </div>
         </div>
 
-        <div class="demo-area">
-            <h4>&#x1F4CB; Codigo completo del contrato</h4>
-            <pre id="fullContractCode" style="max-height:300px;overflow-y:auto"><button class="copy-btn" onclick="copyFullContract()">Copiar Todo</button><span class="cmt">// SPDX-License-Identifier: MIT</span>
-<span class="kw">pragma solidity</span> ^0.8.19;
+        <div class="screenshot">
+            <div class="ss-icon">&#x1F4C1;</div>
+            En Remix: Home > Clone a Git Repository > pegar URL > Clone<br>
+            Resultado: ssi-demo-sepolia/ > contracts/ > SSIAccessControl.sol
+        </div>
 
-<span class="kw">contract</span> <span class="typ">SSIAccessControl</span> {
-
-    <span class="kw">address</span> <span class="kw">public</span> owner;
-    <span class="kw">string</span>  <span class="kw">private</span> personalData;
-    <span class="kw">uint256</span> <span class="kw">public</span>  defaultDuration;
-
-    <span class="kw">struct</span> <span class="typ">AccessGrant</span> {
-        <span class="kw">bool</span>    authorized;
-        <span class="kw">uint256</span> grantedAt;
-        <span class="kw">uint256</span> expiresAt;
-        <span class="kw">string</span>  purpose;
-    }
-
-    <span class="kw">mapping</span>(<span class="kw">address</span> => <span class="typ">AccessGrant</span>) <span class="kw">public</span> accessGrants;
-    <span class="kw">address</span>[] <span class="kw">public</span> authorizedList;
-
-    <span class="kw">event</span> <span class="fn">AccessGranted</span>(<span class="kw">address indexed</span> viewer, <span class="kw">uint256</span> expiresAt, <span class="kw">string</span> purpose);
-    <span class="kw">event</span> <span class="fn">AccessRevoked</span>(<span class="kw">address indexed</span> viewer, <span class="kw">string</span> reason);
-    <span class="kw">event</span> <span class="fn">DataAccessed</span>(<span class="kw">address indexed</span> viewer, <span class="kw">uint256</span> timestamp);
-    <span class="kw">event</span> <span class="fn">DataUpdated</span>(<span class="kw">uint256</span> timestamp);
-
-    <span class="kw">modifier</span> <span class="fn">onlyOwner</span>() {
-        <span class="fn">require</span>(msg.sender == owner, <span class="str">"Solo el titular puede realizar esta accion"</span>);
-        _;
-    }
-
-    <span class="kw">modifier</span> <span class="fn">hasValidAccess</span>() {
-        <span class="typ">AccessGrant</span> <span class="kw">memory</span> grant = accessGrants[msg.sender];
-        <span class="fn">require</span>(grant.authorized, <span class="str">"No tienes autorizacion"</span>);
-        <span class="fn">require</span>(block.timestamp <= grant.expiresAt, <span class="str">"Tu acceso ha expirado"</span>);
-        _;
-    }
-
-    <span class="kw">constructor</span>(<span class="kw">string memory</span> _personalData, <span class="kw">uint256</span> _defaultDuration) {
-        owner = msg.sender;
-        personalData = _personalData;
-        defaultDuration = _defaultDuration;
-    }
-
-    <span class="kw">function</span> <span class="fn">grantAccess</span>(<span class="kw">address</span> _viewer, <span class="kw">string memory</span> _purpose) <span class="kw">external</span> onlyOwner {
-        <span class="fn">require</span>(_viewer != <span class="kw">address</span>(<span class="num">0</span>), <span class="str">"Direccion invalida"</span>);
-        <span class="kw">if</span> (!accessGrants[_viewer].authorized) { authorizedList.push(_viewer); }
-        <span class="kw">uint256</span> expiry = block.timestamp + defaultDuration;
-        accessGrants[_viewer] = <span class="typ">AccessGrant</span>(<span class="kw">true</span>, block.timestamp, expiry, _purpose);
-        <span class="kw">emit</span> <span class="fn">AccessGranted</span>(_viewer, expiry, _purpose);
-    }
-
-    <span class="kw">function</span> <span class="fn">revokeAccess</span>(<span class="kw">address</span> _viewer, <span class="kw">string memory</span> _reason) <span class="kw">external</span> onlyOwner {
-        <span class="fn">require</span>(accessGrants[_viewer].authorized, <span class="str">"No tiene acceso"</span>);
-        accessGrants[_viewer].authorized = <span class="kw">false</span>;
-        accessGrants[_viewer].expiresAt = block.timestamp;
-        <span class="kw">emit</span> <span class="fn">AccessRevoked</span>(_viewer, _reason);
-    }
-
-    <span class="kw">function</span> <span class="fn">updatePersonalData</span>(<span class="kw">string memory</span> _newData) <span class="kw">external</span> onlyOwner {
-        personalData = _newData;
-        <span class="kw">emit</span> <span class="fn">DataUpdated</span>(block.timestamp);
-    }
-
-    <span class="kw">function</span> <span class="fn">setDefaultDuration</span>(<span class="kw">uint256</span> _newDuration) <span class="kw">external</span> onlyOwner {
-        defaultDuration = _newDuration;
-    }
-
-    <span class="kw">function</span> <span class="fn">viewData</span>() <span class="kw">external</span> hasValidAccess <span class="kw">returns</span> (<span class="kw">string memory</span>) {
-        <span class="kw">emit</span> <span class="fn">DataAccessed</span>(msg.sender, block.timestamp);
-        <span class="kw">return</span> personalData;
-    }
-
-    <span class="kw">function</span> <span class="fn">viewDataAsOwner</span>() <span class="kw">external view</span> onlyOwner <span class="kw">returns</span> (<span class="kw">string memory</span>) {
-        <span class="kw">return</span> personalData;
-    }
-
-    <span class="kw">function</span> <span class="fn">hasAccess</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (<span class="kw">bool</span>) {
-        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
-        <span class="kw">return</span> g.authorized && block.timestamp <= g.expiresAt;
-    }
-
-    <span class="kw">function</span> <span class="fn">remainingTime</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (<span class="kw">uint256</span>) {
-        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
-        <span class="kw">if</span> (!g.authorized || block.timestamp > g.expiresAt) <span class="kw">return</span> <span class="num">0</span>;
-        <span class="kw">return</span> g.expiresAt - block.timestamp;
-    }
-
-    <span class="kw">function</span> <span class="fn">getAccessDetails</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (
-        <span class="kw">bool</span> authorized, <span class="kw">uint256</span> grantedAt, <span class="kw">uint256</span> expiresAt,
-        <span class="kw">string memory</span> purpose, <span class="kw">uint256</span> secondsRemaining
-    ) {
-        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
-        <span class="kw">uint256</span> rem = <span class="num">0</span>;
-        <span class="kw">if</span> (g.authorized && block.timestamp <= g.expiresAt) { rem = g.expiresAt - block.timestamp; }
-        <span class="kw">return</span> (g.authorized, g.grantedAt, g.expiresAt, g.purpose, rem);
-    }
-
-    <span class="kw">function</span> <span class="fn">getAuthorizedCount</span>() <span class="kw">external view returns</span> (<span class="kw">uint256</span>) {
-        <span class="kw">return</span> authorizedList.length;
-    }
-}</pre>
+        <div class="step-box">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Abre el archivo del contrato</strong>
+                <p>En el File Explorer, navega a <code>contracts/SSIAccessControl.sol</code> y haz doble click para abrirlo.</p>
+            </div>
         </div>
 
         <div class="callout info">
             <span class="icon">&#x1F4A1;</span>
-            <div>Despues de pegar, verifica que el archivo aparece en el File Explorer de Remix
-            con el nombre <strong>SSIAccessControl.sol</strong>.</div>
+            <div>Si el clon falla, como alternativa puedes crear el archivo manualmente:
+            File Explorer > click en <strong>"+"</strong> > nombrar <code>SSIAccessControl.sol</code> >
+            copiar el codigo desde <a href="https://github.com/alejoherrera/ssi-demo-sepolia/blob/main/contracts/SSIAccessControl.sol" target="_blank" style="color:var(--accent)">GitHub</a> y pegarlo.</div>
         </div>
     `
 },
@@ -1598,6 +1512,16 @@ contract SSIAccessControl {
         return authorizedList.length;
     }
 }`;
+
+function copyRepoUrl() {
+    const input = document.getElementById('repoUrl');
+    const out = document.getElementById('repoUrlOutput');
+    if (input) {
+        navigator.clipboard.writeText(input.value).then(() => {
+            if (out) out.innerHTML = '<span style="color:var(--green)">&#x2713; URL copiada al portapapeles. Pegala en Remix.</span>';
+        });
+    }
+}
 
 function openEtherscan() {
     const hash = document.getElementById('etherscanTxHash')?.value.trim();
