@@ -8,7 +8,7 @@ Demo educativo que ilustra principios de **Identidad Digital Autosoberana (Self-
 |-----------|---------------|
 | **Control del Titular** | Solo el owner del contrato gestiona accesos |
 | **Divulgacion Selectiva** | Solo direcciones especificas pueden ver el dato |
-| **Acceso Temporal** | Ventana de 20 segundos (configurable) |
+| **Acceso Temporal** | Ventana de 30 minutos (configurable) |
 | **Revocabilidad** | El titular revoca acceso en cualquier momento |
 
 ## Requisitos
@@ -27,7 +27,7 @@ Demo educativo que ilustra principios de **Identidad Digital Autosoberana (Self-
 4. En "Deploy & Run", selecciona **Injected Provider - MetaMask**
 5. En el constructor ingresa:
    - `_personalData`: `"Cedula: 1-1234-5678"` (o cualquier dato de ejemplo)
-   - `_defaultDuration`: `20` (segundos)
+   - `_defaultDuration`: `1800` (30 minutos en segundos)
 6. Deploy -> confirma en MetaMask
 7. Copia la direccion del contrato desplegado
 
@@ -45,15 +45,15 @@ Demo educativo que ilustra principios de **Identidad Digital Autosoberana (Self-
 **Como Verificador (otra cuenta):**
 - Cambia de cuenta en MetaMask
 - Conecta con la misma direccion de contrato
-- Veras el countdown de 20 segundos
+- Veras el countdown de 30 minutos
 - Intenta ver el dato antes de que expire
 
 ### 3. Demo Paso a Paso
 
 1. **Owner despliega** el contrato con un dato personal
 2. **Owner otorga** acceso temporal a un verificador
-3. **Verificador** tiene 20 segundos para ver el dato
-4. **Despues de 20s** el acceso expira automaticamente
+3. **Verificador** tiene 30 minutos para ver el dato
+4. **Despues de 30 min** el acceso expira automaticamente
 5. **Owner puede revocar** antes de que expire
 
 ## Estructura

@@ -9,7 +9,7 @@ pragma solidity ^0.8.19;
  * Principios SSI demostrados:
  * 1. Control del titular (Owner) - Solo el dueño gestiona accesos
  * 2. Divulgacion selectiva - Solo direcciones autorizadas ven el dato
- * 3. Acceso temporal - Ventana de 20 segundos (configurable)
+ * 3. Acceso temporal - Ventana de 30 minutos (configurable)
  * 4. Revocabilidad - El titular revoca en cualquier momento
  */
 contract SSIAccessControl {
@@ -46,7 +46,7 @@ contract SSIAccessControl {
     }
 
     /// @param _personalData Dato a proteger
-    /// @param _defaultDuration Segundos de acceso (ej: 20)
+    /// @param _defaultDuration Segundos de acceso (ej: 1800 = 30 min)
     constructor(string memory _personalData, uint256 _defaultDuration) {
         owner = msg.sender;
         personalData = _personalData;

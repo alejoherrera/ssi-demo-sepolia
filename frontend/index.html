@@ -105,7 +105,7 @@
         <div class="principles">
             <div class="principle"><div class="icon">&#x1F464;</div><strong>Control del Titular</strong><div class="label">Solo el owner gestiona accesos</div></div>
             <div class="principle"><div class="icon">&#x1F3AF;</div><strong>Divulgacion Selectiva</strong><div class="label">Solo direcciones autorizadas</div></div>
-            <div class="principle"><div class="icon">&#x23F1;</div><strong>Acceso Temporal</strong><div class="label">Ventana de 20 segundos</div></div>
+            <div class="principle"><div class="icon">&#x23F1;</div><strong>Acceso Temporal</strong><div class="label">Ventana de 30 minutos</div></div>
             <div class="principle"><div class="icon">&#x1F6AB;</div><strong>Revocabilidad</strong><div class="label">Revocar en cualquier momento</div></div>
         </div>
     </div>
@@ -146,7 +146,7 @@
         <div class="row" style="margin-top:10px">
             <input id="grantAddr" placeholder="0x... direccion del verificador">
             <input id="grantPurpose" placeholder="Proposito" style="max-width:200px">
-            <button onclick="grantAccess()">Otorgar (20s)</button>
+            <button onclick="grantAccess()">Otorgar (30 min)</button>
         </div>
 
         <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0">
@@ -169,7 +169,7 @@
                     <circle class="progress" id="timerCircle" cx="60" cy="60" r="52"
                         stroke-dasharray="326.73" stroke-dashoffset="0"></circle>
                 </svg>
-                <div class="timer-text" id="timerText">20</div>
+                <div class="timer-text" id="timerText">30:00</div>
             </div>
         </div>
         <div id="revealedData" class="hidden"></div>
@@ -302,7 +302,7 @@
             const tx = await contract.grantAccess(addr, purpose);
             addLog('Otorgando acceso a ' + addr.slice(0,8) + '...');
             await tx.wait();
-            addLog('Acceso otorgado por 20s a ' + addr.slice(0,8) + '...');
+            addLog('Acceso otorgado por 30min a ' + addr.slice(0,8) + '...');
             document.getElementById('grantAddr').value = '';
             document.getElementById('grantPurpose').value = '';
         } catch(e) { addLog('Error: ' + e.message); }
@@ -361,6 +361,12 @@
         }
     }
 
+    function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return m + ':' + String(sec).padStart(2, '0');
+    }
+
     function startCountdown(seconds) {
         document.getElementById('timerContainer').classList.remove('hidden');
         const circle = document.getElementById('timerCircle');
@@ -371,10 +377,10 @@
         if (countdownInterval) clearInterval(countdownInterval);
 
         function update() {
-            text.textContent = remaining;
+            text.textContent = formatTime(remaining);
             const offset = circumference * (1 - remaining / seconds);
             circle.style.strokeDashoffset = offset;
-            if (remaining <= 5) circle.style.stroke = '#ff6b6b';
+            if (remaining <= 30) circle.style.stroke = '#ff6b6b';
             else circle.style.stroke = '#00d2ff';
         }
         update();
@@ -383,7 +389,7 @@
             remaining--;
             if (remaining <= 0) {
                 clearInterval(countdownInterval);
-                text.textContent = '0';
+                text.textContent = '0:00';
                 circle.style.strokeDashoffset = circumference;
                 document.getElementById('viewBtn').disabled = true;
                 document.getElementById('accessStatus').innerHTML =

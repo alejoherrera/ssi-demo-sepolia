@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSI Demo - Presentacion Interactiva</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a1a;
+            --bg-card: rgba(255,255,255,0.04);
+            --accent: #00d2ff;
+            --accent2: #7b68ee;
+            --green: #51cf66;
+            --red: #ff6b6b;
+            --orange: #ffa94d;
+            --text: #e0e0e0;
+            --muted: #888;
+            --border: rgba(255,255,255,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,10,26,0.92); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 28px; height: 56px;
+        }
+        .topbar-title {
+            font-size: 1em; font-weight: 700;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .step-counter { font-size: 0.85em; color: var(--muted); }
+
+        /* ── Progress bar ── */
+        .progress-track {
+            position: fixed; top: 56px; left: 0; right: 0; height: 3px;
+            background: rgba(255,255,255,0.06); z-index: 100;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.5s ease;
+        }
+
+        /* ── Sidebar nav ── */
+        .sidebar {
+            position: fixed; left: 0; top: 59px; bottom: 0; width: 260px;
+            background: rgba(10,10,26,0.6); backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            overflow-y: auto; padding: 20px 0; z-index: 90;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .nav-section { padding: 8px 20px; font-size: 0.7em; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--muted); margin-top: 12px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; cursor: pointer; font-size: 0.88em;
+            transition: all 0.2s; border-left: 3px solid transparent;
+            color: var(--muted);
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+        .nav-item.active { border-left-color: var(--accent); color: #fff;
+            background: rgba(0,210,255,0.06); }
+        .nav-item.done { color: var(--green); }
+        .nav-item .nav-num {
+            width: 24px; height: 24px; border-radius: 50%; font-size: 0.75em;
+            display: flex; align-items: center; justify-content: center;
+            border: 1.5px solid currentColor; flex-shrink: 0;
+        }
+        .nav-item.done .nav-num { background: var(--green); color: var(--bg-dark); border-color: var(--green); }
+        .nav-item.active .nav-num { background: var(--accent); color: var(--bg-dark); border-color: var(--accent); }
+
+        /* ── Main content ── */
+        .main { margin-left: 260px; margin-top: 59px; padding: 36px 48px 100px; max-width: 960px; }
+
+        /* ── Slides ── */
+        .slide { display: none; animation: fadeSlide 0.4s ease; }
+        .slide.active { display: block; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h2 {
+            font-size: 1.7em; margin-bottom: 6px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .slide .lead { color: var(--muted); font-size: 1em; margin-bottom: 28px; }
+
+        /* ── Reusable blocks ── */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 26px; margin-bottom: 18px;
+        }
+        .card h3 { font-size: 1.05em; margin-bottom: 10px; color: #fff; }
+
+        .step-box {
+            display: flex; gap: 14px; margin-bottom: 16px;
+            padding: 14px 18px; border-radius: 12px;
+            background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+            align-items: flex-start;
+        }
+        .step-num {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; font-size: 0.85em; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .step-content { flex: 1; }
+        .step-content strong { display: block; margin-bottom: 4px; }
+        .step-content p { color: var(--muted); font-size: 0.9em; line-height: 1.5; }
+
+        pre {
+            background: #0d0d22; border: 1px solid var(--border);
+            border-radius: 10px; padding: 16px 20px; overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85em; line-height: 1.6; margin: 12px 0;
+            position: relative;
+        }
+        pre .copy-btn {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+            color: var(--muted); padding: 4px 10px; border-radius: 6px;
+            font-size: 0.75em; cursor: pointer; transition: all 0.2s;
+        }
+        pre .copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        .kw { color: #c792ea; }
+        .fn { color: #82aaff; }
+        .str { color: #c3e88d; }
+        .cmt { color: #546e7a; }
+        .typ { color: #ffcb6b; }
+        .num { color: #f78c6c; }
+        .mod { color: #89ddff; }
+        .var { color: #eeffff; }
+
+        .callout {
+            border-radius: 12px; padding: 16px 20px; margin: 16px 0;
+            display: flex; gap: 12px; align-items: flex-start;
+            font-size: 0.9em; line-height: 1.5;
+        }
+        .callout .icon { font-size: 1.3em; flex-shrink: 0; margin-top: 1px; }
+        .callout.info { background: rgba(0,210,255,0.08); border: 1px solid rgba(0,210,255,0.2); }
+        .callout.warn { background: rgba(255,169,77,0.08); border: 1px solid rgba(255,169,77,0.2); }
+        .callout.success { background: rgba(81,207,102,0.08); border: 1px solid rgba(81,207,102,0.2); }
+        .callout.danger { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2); }
+
+        .tag {
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 0.78em; font-weight: 600;
+        }
+        .tag.sol { background: rgba(0,210,255,0.15); color: var(--accent); }
+        .tag.concept { background: rgba(123,104,238,0.15); color: var(--accent2); }
+        .tag.metamask { background: rgba(255,169,77,0.15); color: var(--orange); }
+
+        .diagram {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0; margin: 24px 0; flex-wrap: wrap;
+        }
+        .diagram-box {
+            background: var(--bg-card); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: 14px 20px; text-align: center;
+            min-width: 130px;
+        }
+        .diagram-box .d-icon { font-size: 1.6em; margin-bottom: 4px; }
+        .diagram-box .d-label { font-size: 0.82em; font-weight: 600; }
+        .diagram-box .d-sub { font-size: 0.72em; color: var(--muted); }
+        .diagram-arrow { font-size: 1.5em; color: var(--accent); padding: 0 8px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+        .checklist label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: 10px; cursor: pointer;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            margin-bottom: 8px; font-size: 0.9em; transition: all 0.2s;
+        }
+        .checklist label:hover { background: rgba(255,255,255,0.05); }
+        .checklist input[type="checkbox"] { accent-color: var(--green); width: 18px; height: 18px; }
+        .checklist label.checked { border-color: var(--green); background: rgba(81,207,102,0.05); }
+
+        /* ── Screenshot placeholder ── */
+        .screenshot {
+            border: 1.5px dashed var(--border); border-radius: 14px;
+            padding: 30px; text-align: center; color: var(--muted);
+            font-size: 0.85em; margin: 14px 0;
+            background: repeating-linear-gradient(
+                45deg, transparent, transparent 10px,
+                rgba(255,255,255,0.01) 10px, rgba(255,255,255,0.01) 20px
+            );
+        }
+        .screenshot .ss-icon { font-size: 2.2em; margin-bottom: 8px; opacity: 0.5; }
+
+        /* ── Nav buttons ── */
+        .nav-buttons {
+            display: flex; gap: 12px; margin-top: 36px; padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        .btn {
+            padding: 12px 28px; border-radius: 10px; font-size: 0.95em;
+            font-weight: 600; cursor: pointer; border: none; transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,210,255,0.25); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.06); color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        .principle-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 18px 0;
+        }
+        .principle-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px; transition: all 0.3s;
+        }
+        .principle-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .principle-card .p-icon { font-size: 1.5em; margin-bottom: 6px; }
+        .principle-card .p-title { font-weight: 700; margin-bottom: 4px; }
+        .principle-card .p-desc { font-size: 0.82em; color: var(--muted); line-height: 1.4; }
+
+        /* ── Interactive demo area ── */
+        .demo-area {
+            background: #080818; border: 1.5px solid var(--border);
+            border-radius: 14px; padding: 24px; margin: 16px 0;
+        }
+        .demo-area h4 { color: var(--accent); margin-bottom: 14px; font-size: 0.95em; }
+        .demo-input {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.9em;
+            width: 100%; margin-bottom: 10px; font-family: monospace;
+        }
+        .demo-input::placeholder { color: #555; }
+        .demo-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; border: none; padding: 10px 22px; border-radius: 8px;
+            cursor: pointer; font-weight: 600; font-size: 0.88em;
+            transition: all 0.3s;
+        }
+        .demo-btn:hover { transform: translateY(-1px); }
+        .demo-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .demo-btn.danger { background: linear-gradient(135deg, var(--red), #ee5a24); }
+        .demo-output {
+            background: rgba(0,0,0,0.3); border-radius: 8px; padding: 14px;
+            font-family: monospace; font-size: 0.85em; margin-top: 12px;
+            min-height: 40px; white-space: pre-wrap; line-height: 1.5;
+        }
+        .demo-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .demo-row .demo-input { margin-bottom: 0; flex: 1; min-width: 180px; }
+
+        /* ── Countdown ring ── */
+        .countdown-container { text-align: center; margin: 20px 0; }
+        .countdown-ring { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+        .countdown-ring svg { transform: rotate(-90deg); }
+        .countdown-ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+        .countdown-ring .bg-ring { stroke: rgba(255,255,255,0.06); }
+        .countdown-ring .fg-ring { stroke: var(--accent); transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+        .countdown-time {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            font-size: 2.2em; font-weight: 700;
+        }
+
+        /* ── Timeline ── */
+        .timeline { position: relative; padding-left: 30px; margin: 20px 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
+            width: 2px; background: var(--border);
+        }
+        .tl-item { position: relative; margin-bottom: 20px; }
+        .tl-item::before {
+            content: ''; position: absolute; left: -24px; top: 6px;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--accent); border: 2px solid var(--bg-dark);
+        }
+        .tl-item.tl-red::before { background: var(--red); }
+        .tl-item.tl-green::before { background: var(--green); }
+        .tl-item.tl-orange::before { background: var(--orange); }
+        .tl-item strong { display: block; margin-bottom: 3px; }
+        .tl-item p { color: var(--muted); font-size: 0.88em; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px 20px 80px; }
+            .principle-grid, .grid-2 { grid-template-columns: 1fr; }
+            .diagram { flex-direction: column; }
+            .diagram-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<div class="topbar">
+    <span class="topbar-title">SSI Demo — Guia Interactiva</span>
+    <span class="step-counter" id="stepCounter">Paso 1 / 10</span>
+</div>
+<div class="progress-track"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar" id="sidebar"></div>
+
+<!-- ── Main ── -->
+<div class="main" id="mainContent"></div>
+
+<script>
+// =====================================================================
+// Slide definitions
+// =====================================================================
+const slides = [
+{
+    id: 'intro',
+    nav: 'Introduccion',
+    section: 'Teoria',
+    title: 'Identidad Digital Autosoberana',
+    lead: 'Que es SSI y por que importa',
+    html: `
+        <div class="card">
+            <h3>Que es SSI (Self-Sovereign Identity)?</h3>
+            <p style="color:var(--muted);line-height:1.7;margin-bottom:16px">
+                La Identidad Digital Autosoberana es un modelo donde <strong style="color:#fff">el individuo controla
+                sus propios datos de identidad</strong>, sin depender de una autoridad central. Usa criptografia
+                y blockchain para garantizar que solo el titular decide quien, cuando y por cuanto tiempo
+                puede ver su informacion.
+            </p>
+        </div>
+
+        <div class="principle-grid">
+            <div class="principle-card">
+                <div class="p-icon">&#x1F464;</div>
+                <div class="p-title">Control del Titular</div>
+                <div class="p-desc">Solo el dueno de la identidad gestiona quien accede a sus datos. Nadie mas puede otorgar o revocar permisos.</div>
+            </div>
+            <div class="principle-card">
+                <div class="p-icon">&#x1F3AF;</div>
+                <div class="p-title">Divulgacion Selectiva</div>
+                <div class="p-desc">El titular elige exactamente que datos compartir y con quien. No es todo-o-nada.</div>
+            </div>
+            <div class="principle-card">
+                <div class="p-icon">&#x23F1;</div>
+                <div class="p-title">Acceso Temporal</div>
+                <div class="p-desc">Los permisos tienen una ventana de tiempo limitada. Tras expirar, el acceso se corta automaticamente.</div>
+            </div>
+            <div class="principle-card">
+                <div class="p-icon">&#x1F6AB;</div>
+                <div class="p-title">Revocabilidad</div>
+                <div class="p-desc">El titular puede revocar el acceso en cualquier momento, incluso antes de que expire.</div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span class="icon">&#x1F4A1;</span>
+            <div>En esta demo usamos un smart contract en <strong>Ethereum Sepolia</strong> (testnet) para
+            implementar estos 4 principios. El contrato almacena un dato personal y controla
+            quien puede verlo, por cuanto tiempo y con que proposito.</div>
+        </div>
+    `
+},
+{
+    id: 'architecture',
+    nav: 'Arquitectura',
+    section: 'Teoria',
+    title: 'Arquitectura del Sistema',
+    lead: 'Como interactuan los componentes',
+    html: `
+        <div class="diagram">
+            <div class="diagram-box">
+                <div class="d-icon">&#x1F464;</div>
+                <div class="d-label">Titular (Owner)</div>
+                <div class="d-sub">MetaMask Cuenta #1</div>
+            </div>
+            <div class="diagram-arrow">&#x27A1;</div>
+            <div class="diagram-box" style="border-color:var(--accent)">
+                <div class="d-icon">&#x1F4DC;</div>
+                <div class="d-label">Smart Contract</div>
+                <div class="d-sub">SSIAccessControl.sol</div>
+            </div>
+            <div class="diagram-arrow">&#x27A1;</div>
+            <div class="diagram-box">
+                <div class="d-icon">&#x1F50D;</div>
+                <div class="d-label">Verificador</div>
+                <div class="d-sub">MetaMask Cuenta #2</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Flujo completo</h3>
+            <div class="timeline">
+                <div class="tl-item tl-green">
+                    <strong>1. Deploy</strong>
+                    <p>El Titular despliega el contrato con su dato personal y la duracion de acceso (30 min).</p>
+                </div>
+                <div class="tl-item">
+                    <strong>2. Grant Access</strong>
+                    <p>El Titular llama a <code>grantAccess(direccion, proposito)</code> para autorizar a un verificador.</p>
+                </div>
+                <div class="tl-item tl-orange">
+                    <strong>3. Ventana Temporal</strong>
+                    <p>El Verificador tiene 30 minutos para llamar a <code>viewData()</code> y ver el dato.</p>
+                </div>
+                <div class="tl-item tl-red">
+                    <strong>4. Expiracion / Revocacion</strong>
+                    <p>El acceso expira automaticamente o el Titular lo revoca antes con <code>revokeAccess()</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Stack Tecnologico</h3>
+                <p style="font-size:0.9em;color:var(--muted);line-height:1.8">
+                    <span class="tag sol">Solidity ^0.8.19</span> Smart Contract<br>
+                    <span class="tag metamask">MetaMask</span> Wallet / Firma<br>
+                    <span class="tag concept">ethers.js v6</span> Conexion Web3<br>
+                    <span class="tag sol">Remix IDE</span> Compilacion y deploy<br>
+                    <span class="tag concept">Sepolia</span> Testnet Ethereum
+                </p>
+            </div>
+            <div class="card">
+                <h3>Archivos del Proyecto</h3>
+                <pre style="margin:0;border:none;padding:10px"><span class="cmt">ssi-demo-sepolia/</span>
+├── contracts/
+│   └── <span class="fn">SSIAccessControl.sol</span>
+├── frontend/
+│   ├── <span class="fn">index.html</span>
+│   └── <span class="fn">presentacion.html</span>
+└── <span class="cmt">README.md</span></pre>
+            </div>
+        </div>
+    `
+},
+{
+    id: 'contract-code',
+    nav: 'Codigo del Contrato',
+    section: 'Contrato',
+    title: 'Analisis del Smart Contract',
+    lead: 'Entendiendo SSIAccessControl.sol linea por linea',
+    html: `
+        <div class="card">
+            <h3>Estructura principal</h3>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><span class="kw">contract</span> <span class="typ">SSIAccessControl</span> {
+
+    <span class="kw">address</span> <span class="kw">public</span>  <span class="var">owner</span>;           <span class="cmt">// Titular de la identidad</span>
+    <span class="kw">string</span>  <span class="kw">private</span> <span class="var">personalData</span>;    <span class="cmt">// Dato protegido</span>
+    <span class="kw">uint256</span> <span class="kw">public</span>  <span class="var">defaultDuration</span>; <span class="cmt">// Segundos de acceso (ej: 1800 = 30 min)</span>
+
+    <span class="kw">struct</span> <span class="typ">AccessGrant</span> {
+        <span class="kw">bool</span>    authorized;    <span class="cmt">// tiene permiso?</span>
+        <span class="kw">uint256</span> grantedAt;     <span class="cmt">// timestamp de inicio</span>
+        <span class="kw">uint256</span> expiresAt;     <span class="cmt">// timestamp de expiracion</span>
+        <span class="kw">string</span>  purpose;       <span class="cmt">// proposito del acceso</span>
+    }
+
+    <span class="kw">mapping</span>(<span class="kw">address</span> => <span class="typ">AccessGrant</span>) <span class="kw">public</span> <span class="var">accessGrants</span>;
+}</pre>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Modifier: onlyOwner</h3>
+                <pre style="margin:0;border:none;padding:8px"><span class="kw">modifier</span> <span class="fn">onlyOwner</span>() {
+    <span class="fn">require</span>(
+        msg.sender == owner,
+        <span class="str">"Solo el titular"</span>
+    );
+    _;
+}</pre>
+                <p style="font-size:0.82em;color:var(--muted);margin-top:8px">
+                    Protege funciones que solo el titular puede ejecutar:
+                    grantAccess, revokeAccess, updatePersonalData.
+                </p>
+            </div>
+            <div class="card">
+                <h3>Modifier: hasValidAccess</h3>
+                <pre style="margin:0;border:none;padding:8px"><span class="kw">modifier</span> <span class="fn">hasValidAccess</span>() {
+    <span class="fn">require</span>(
+        grant.authorized,
+        <span class="str">"No tienes autorizacion"</span>
+    );
+    <span class="fn">require</span>(
+        block.timestamp <= grant.expiresAt,
+        <span class="str">"Tu acceso ha expirado"</span>
+    );
+    _;
+}</pre>
+                <p style="font-size:0.82em;color:var(--muted);margin-top:8px">
+                    Doble verificacion: que este autorizado Y que no haya expirado.
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Funciones clave</h3>
+            <table style="width:100%;font-size:0.88em;border-collapse:collapse">
+                <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px"><code class="fn">grantAccess(addr, purpose)</code></td>
+                    <td style="padding:10px;color:var(--muted)">Otorga acceso temporal (defaultDuration segundos)</td>
+                    <td style="padding:10px"><span class="tag sol">onlyOwner</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px"><code class="fn">revokeAccess(addr, reason)</code></td>
+                    <td style="padding:10px;color:var(--muted)">Revoca acceso inmediatamente</td>
+                    <td style="padding:10px"><span class="tag sol">onlyOwner</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px"><code class="fn">viewData()</code></td>
+                    <td style="padding:10px;color:var(--muted)">Lee el dato (solo con acceso valido)</td>
+                    <td style="padding:10px"><span class="tag concept">hasValidAccess</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px"><code class="fn">viewDataAsOwner()</code></td>
+                    <td style="padding:10px;color:var(--muted)">El owner siempre puede ver su dato</td>
+                    <td style="padding:10px"><span class="tag sol">onlyOwner</span></td>
+                </tr>
+                <tr>
+                    <td style="padding:10px"><code class="fn">hasAccess(addr)</code></td>
+                    <td style="padding:10px;color:var(--muted)">Consulta si una direccion tiene acceso vigente</td>
+                    <td style="padding:10px"><span class="tag concept">view</span></td>
+                </tr>
+            </table>
+        </div>
+    `
+},
+{
+    id: 'remix-open',
+    nav: 'Abrir Remix IDE',
+    section: 'Compilar & Deploy',
+    title: 'Paso 1: Abrir Remix IDE',
+    lead: 'Preparar el entorno de desarrollo',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Abre Remix IDE en tu navegador</strong>
+                <p>Navega a <strong>remix.ethereum.org</strong>. Es un IDE en linea para Solidity, no necesitas instalar nada.</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F310; Abrir Remix IDE</h4>
+            <button class="demo-btn" onclick="window.open('https://remix.ethereum.org','_blank')">
+                Abrir remix.ethereum.org
+            </button>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Crea un nuevo archivo</strong>
+                <p>En el panel izquierdo de Remix (File Explorer), haz click en el icono de <strong>"New File"</strong>
+                y nombralo <code>SSIAccessControl.sol</code></p>
+            </div>
+        </div>
+
+        <div class="screenshot">
+            <div class="ss-icon">&#x1F4C1;</div>
+            En Remix: File Explorer > click en "+" > escribir SSIAccessControl.sol
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Copia el codigo del contrato</strong>
+                <p>Usa el boton de abajo para copiar el codigo completo y pegalo en Remix.</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F4CB; Codigo completo del contrato</h4>
+            <pre id="fullContractCode" style="max-height:300px;overflow-y:auto"><button class="copy-btn" onclick="copyFullContract()">Copiar Todo</button><span class="cmt">// SPDX-License-Identifier: MIT</span>
+<span class="kw">pragma solidity</span> ^0.8.19;
+
+<span class="kw">contract</span> <span class="typ">SSIAccessControl</span> {
+
+    <span class="kw">address</span> <span class="kw">public</span> owner;
+    <span class="kw">string</span>  <span class="kw">private</span> personalData;
+    <span class="kw">uint256</span> <span class="kw">public</span>  defaultDuration;
+
+    <span class="kw">struct</span> <span class="typ">AccessGrant</span> {
+        <span class="kw">bool</span>    authorized;
+        <span class="kw">uint256</span> grantedAt;
+        <span class="kw">uint256</span> expiresAt;
+        <span class="kw">string</span>  purpose;
+    }
+
+    <span class="kw">mapping</span>(<span class="kw">address</span> => <span class="typ">AccessGrant</span>) <span class="kw">public</span> accessGrants;
+    <span class="kw">address</span>[] <span class="kw">public</span> authorizedList;
+
+    <span class="kw">event</span> <span class="fn">AccessGranted</span>(<span class="kw">address indexed</span> viewer, <span class="kw">uint256</span> expiresAt, <span class="kw">string</span> purpose);
+    <span class="kw">event</span> <span class="fn">AccessRevoked</span>(<span class="kw">address indexed</span> viewer, <span class="kw">string</span> reason);
+    <span class="kw">event</span> <span class="fn">DataAccessed</span>(<span class="kw">address indexed</span> viewer, <span class="kw">uint256</span> timestamp);
+    <span class="kw">event</span> <span class="fn">DataUpdated</span>(<span class="kw">uint256</span> timestamp);
+
+    <span class="kw">modifier</span> <span class="fn">onlyOwner</span>() {
+        <span class="fn">require</span>(msg.sender == owner, <span class="str">"Solo el titular puede realizar esta accion"</span>);
+        _;
+    }
+
+    <span class="kw">modifier</span> <span class="fn">hasValidAccess</span>() {
+        <span class="typ">AccessGrant</span> <span class="kw">memory</span> grant = accessGrants[msg.sender];
+        <span class="fn">require</span>(grant.authorized, <span class="str">"No tienes autorizacion"</span>);
+        <span class="fn">require</span>(block.timestamp <= grant.expiresAt, <span class="str">"Tu acceso ha expirado"</span>);
+        _;
+    }
+
+    <span class="kw">constructor</span>(<span class="kw">string memory</span> _personalData, <span class="kw">uint256</span> _defaultDuration) {
+        owner = msg.sender;
+        personalData = _personalData;
+        defaultDuration = _defaultDuration;
+    }
+
+    <span class="kw">function</span> <span class="fn">grantAccess</span>(<span class="kw">address</span> _viewer, <span class="kw">string memory</span> _purpose) <span class="kw">external</span> onlyOwner {
+        <span class="fn">require</span>(_viewer != <span class="kw">address</span>(<span class="num">0</span>), <span class="str">"Direccion invalida"</span>);
+        <span class="kw">if</span> (!accessGrants[_viewer].authorized) { authorizedList.push(_viewer); }
+        <span class="kw">uint256</span> expiry = block.timestamp + defaultDuration;
+        accessGrants[_viewer] = <span class="typ">AccessGrant</span>(<span class="kw">true</span>, block.timestamp, expiry, _purpose);
+        <span class="kw">emit</span> <span class="fn">AccessGranted</span>(_viewer, expiry, _purpose);
+    }
+
+    <span class="kw">function</span> <span class="fn">revokeAccess</span>(<span class="kw">address</span> _viewer, <span class="kw">string memory</span> _reason) <span class="kw">external</span> onlyOwner {
+        <span class="fn">require</span>(accessGrants[_viewer].authorized, <span class="str">"No tiene acceso"</span>);
+        accessGrants[_viewer].authorized = <span class="kw">false</span>;
+        accessGrants[_viewer].expiresAt = block.timestamp;
+        <span class="kw">emit</span> <span class="fn">AccessRevoked</span>(_viewer, _reason);
+    }
+
+    <span class="kw">function</span> <span class="fn">updatePersonalData</span>(<span class="kw">string memory</span> _newData) <span class="kw">external</span> onlyOwner {
+        personalData = _newData;
+        <span class="kw">emit</span> <span class="fn">DataUpdated</span>(block.timestamp);
+    }
+
+    <span class="kw">function</span> <span class="fn">setDefaultDuration</span>(<span class="kw">uint256</span> _newDuration) <span class="kw">external</span> onlyOwner {
+        defaultDuration = _newDuration;
+    }
+
+    <span class="kw">function</span> <span class="fn">viewData</span>() <span class="kw">external</span> hasValidAccess <span class="kw">returns</span> (<span class="kw">string memory</span>) {
+        <span class="kw">emit</span> <span class="fn">DataAccessed</span>(msg.sender, block.timestamp);
+        <span class="kw">return</span> personalData;
+    }
+
+    <span class="kw">function</span> <span class="fn">viewDataAsOwner</span>() <span class="kw">external view</span> onlyOwner <span class="kw">returns</span> (<span class="kw">string memory</span>) {
+        <span class="kw">return</span> personalData;
+    }
+
+    <span class="kw">function</span> <span class="fn">hasAccess</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (<span class="kw">bool</span>) {
+        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
+        <span class="kw">return</span> g.authorized && block.timestamp <= g.expiresAt;
+    }
+
+    <span class="kw">function</span> <span class="fn">remainingTime</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (<span class="kw">uint256</span>) {
+        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
+        <span class="kw">if</span> (!g.authorized || block.timestamp > g.expiresAt) <span class="kw">return</span> <span class="num">0</span>;
+        <span class="kw">return</span> g.expiresAt - block.timestamp;
+    }
+
+    <span class="kw">function</span> <span class="fn">getAccessDetails</span>(<span class="kw">address</span> _viewer) <span class="kw">external view returns</span> (
+        <span class="kw">bool</span> authorized, <span class="kw">uint256</span> grantedAt, <span class="kw">uint256</span> expiresAt,
+        <span class="kw">string memory</span> purpose, <span class="kw">uint256</span> secondsRemaining
+    ) {
+        <span class="typ">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[_viewer];
+        <span class="kw">uint256</span> rem = <span class="num">0</span>;
+        <span class="kw">if</span> (g.authorized && block.timestamp <= g.expiresAt) { rem = g.expiresAt - block.timestamp; }
+        <span class="kw">return</span> (g.authorized, g.grantedAt, g.expiresAt, g.purpose, rem);
+    }
+
+    <span class="kw">function</span> <span class="fn">getAuthorizedCount</span>() <span class="kw">external view returns</span> (<span class="kw">uint256</span>) {
+        <span class="kw">return</span> authorizedList.length;
+    }
+}</pre>
+        </div>
+
+        <div class="callout info">
+            <span class="icon">&#x1F4A1;</span>
+            <div>Despues de pegar, verifica que el archivo aparece en el File Explorer de Remix
+            con el nombre <strong>SSIAccessControl.sol</strong>.</div>
+        </div>
+    `
+},
+{
+    id: 'compile',
+    nav: 'Compilar',
+    section: 'Compilar & Deploy',
+    title: 'Paso 2: Compilar el Contrato',
+    lead: 'Configurar el compilador de Solidity',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Abre el tab "Solidity Compiler"</strong>
+                <p>En el panel izquierdo de Remix, haz click en el icono del compilador (el segundo icono, parece un documento con una flecha).</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Selecciona la version del compilador</strong>
+                <p>Elige una version <strong>0.8.19</strong> o superior (por ejemplo <code>0.8.24</code>). Cualquier 0.8.x >= 19 funciona.</p>
+            </div>
+        </div>
+
+        <div class="screenshot">
+            <div class="ss-icon">&#x2699;</div>
+            Compiler: 0.8.19+commit... &nbsp;|&nbsp; EVM Version: default &nbsp;|&nbsp; Enable optimization: opcional
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Haz click en "Compile SSIAccessControl.sol"</strong>
+                <p>Deberia compilar sin errores. Veras un check verde junto al icono del compilador.</p>
+            </div>
+        </div>
+
+        <div class="callout success">
+            <span class="icon">&#x2705;</span>
+            <div><strong>Compilacion exitosa:</strong> Si ves un checkmark verde, el contrato esta listo para desplegarse.
+            Si hay errores, verifica que copiaste el codigo completo.</div>
+        </div>
+
+        <div class="card">
+            <h3>Que sucede al compilar?</h3>
+            <div class="diagram">
+                <div class="diagram-box">
+                    <div class="d-icon">&#x1F4DD;</div>
+                    <div class="d-label">.sol</div>
+                    <div class="d-sub">Codigo Solidity</div>
+                </div>
+                <div class="diagram-arrow">&#x27A1;</div>
+                <div class="diagram-box">
+                    <div class="d-icon">&#x2699;</div>
+                    <div class="d-label">solc</div>
+                    <div class="d-sub">Compilador</div>
+                </div>
+                <div class="diagram-arrow">&#x27A1;</div>
+                <div class="diagram-box" style="border-color:var(--green)">
+                    <div class="d-icon">&#x1F4E6;</div>
+                    <div class="d-label">Bytecode + ABI</div>
+                    <div class="d-sub">Listo para deploy</div>
+                </div>
+            </div>
+            <p style="font-size:0.85em;color:var(--muted);text-align:center">
+                <strong>Bytecode</strong> = codigo ejecutable en la EVM &nbsp;|&nbsp;
+                <strong>ABI</strong> = interfaz para interactuar desde JavaScript
+            </p>
+        </div>
+    `
+},
+{
+    id: 'deploy',
+    nav: 'Deploy en Sepolia',
+    section: 'Compilar & Deploy',
+    title: 'Paso 3: Deploy en Sepolia',
+    lead: 'Desplegar el contrato en la testnet',
+    html: `
+        <div class="callout warn">
+            <span class="icon">&#x26A0;</span>
+            <div><strong>Prerequisitos:</strong> Necesitas MetaMask conectado a <strong>Sepolia</strong>
+            y algo de SepoliaETH para gas. Si no tienes, usa un faucet como
+            <strong>sepoliafaucet.com</strong> o <strong>cloud.google.com/application/web3/faucet</strong>.</div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Abre "Deploy & Run Transactions"</strong>
+                <p>Es el tercer icono en el panel izquierdo de Remix (parece una flecha apuntando a la derecha con una linea).</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Selecciona el entorno</strong>
+                <p>En "ENVIRONMENT" selecciona <strong>"Injected Provider - MetaMask"</strong>. MetaMask abrira un popup para conectar.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Configura los parametros del constructor</strong>
+                <p>Junto al boton "Deploy" veras los campos del constructor:</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F4DD; Parametros del Constructor</h4>
+            <div style="margin-bottom:12px">
+                <label style="font-size:0.82em;color:var(--muted);display:block;margin-bottom:4px">_personalData (string) — Tu dato protegido:</label>
+                <input class="demo-input" id="demoPersonalData" value="Cedula: 1-1234-5678" placeholder="Ej: Cedula: 1-1234-5678">
+            </div>
+            <div style="margin-bottom:12px">
+                <label style="font-size:0.82em;color:var(--muted);display:block;margin-bottom:4px">_defaultDuration (uint256) — Segundos de acceso:</label>
+                <input class="demo-input" id="demoDuration" value="1800" placeholder="1800">
+            </div>
+            <div class="demo-output" id="deployPreview">
+                <span style="color:var(--accent)">Constructor:</span> SSIAccessControl("<span id="previewData">Cedula: 1-1234-5678</span>", <span id="previewDuration">1800</span>)
+<span style="color:var(--muted)">Esto almacenara tu dato de forma privada y configurara accesos de 30 minutos.</span></div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Click en "Deploy" y confirma en MetaMask</strong>
+                <p>MetaMask mostrara el costo del gas (unos ~0.001 SepoliaETH). Confirma la transaccion.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">5</div>
+            <div class="step-content">
+                <strong>Copia la direccion del contrato</strong>
+                <p>Una vez confirmada la transaccion, en la seccion "Deployed Contracts" de Remix veras tu contrato.
+                Haz click en el icono de copiar junto a la direccion. <strong>Guardala, la necesitaras.</strong></p>
+            </div>
+        </div>
+
+        <div class="callout success">
+            <span class="icon">&#x1F680;</span>
+            <div><strong>Contrato desplegado!</strong> Ahora tienes un smart contract SSI en vivo en Sepolia.
+            La direccion del contrato es como tu "credencial digital" — la compartes con verificadores.</div>
+        </div>
+    `
+},
+{
+    id: 'connect-frontend',
+    nav: 'Conectar Frontend',
+    section: 'Probar',
+    title: 'Paso 4: Conectar el Frontend',
+    lead: 'Usar la interfaz web como Titular',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Abre index.html en tu navegador</strong>
+                <p>Abre el archivo <code>frontend/index.html</code> directamente en Chrome o Firefox (doble click o arrastrar al navegador).</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Pega la direccion del contrato</strong>
+                <p>En el campo "Direccion del contrato desplegado en Sepolia", pega la direccion que copiaste de Remix.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Click en "Conectar MetaMask"</strong>
+                <p>Asegurate de estar con la <strong>misma cuenta</strong> que usaste para el deploy. MetaMask pedira confirmar la conexion.</p>
+            </div>
+        </div>
+
+        <div class="callout success">
+            <span class="icon">&#x1F464;</span>
+            <div>Si estas con la cuenta del deploy, veras el badge <strong>"TITULAR"</strong> y el panel de Owner
+            con tu dato protegido visible.</div>
+        </div>
+
+        <div class="card">
+            <h3>Que puedes hacer como Titular?</h3>
+            <div class="grid-2">
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--green)">&#x2713;</div>
+                    <div class="step-content">
+                        <strong>Ver tu dato</strong>
+                        <p>Aparece automaticamente arriba</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--green)">&#x2713;</div>
+                    <div class="step-content">
+                        <strong>Actualizar dato</strong>
+                        <p>Cambiar el dato personal (cuesta gas)</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--accent)">+</div>
+                    <div class="step-content">
+                        <strong>Otorgar acceso</strong>
+                        <p>Dar 30 min de acceso a otra cuenta</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--red)">&#x2717;</div>
+                    <div class="step-content">
+                        <strong>Revocar acceso</strong>
+                        <p>Quitar permiso antes de que expire</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+},
+{
+    id: 'grant-access',
+    nav: 'Otorgar Acceso',
+    section: 'Probar',
+    title: 'Paso 5: Otorgar Acceso Temporal',
+    lead: 'Simular la divulgacion selectiva',
+    html: `
+        <div class="callout info">
+            <span class="icon">&#x1F4A1;</span>
+            <div>Para esta demo necesitas <strong>2 cuentas en MetaMask</strong>. Si solo tienes una,
+            crea otra en MetaMask > click en el avatar > "Add account".</div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Copia la direccion de tu segunda cuenta</strong>
+                <p>En MetaMask, cambia a tu Cuenta #2 y copia su direccion (0x...). Luego <strong>vuelve a la Cuenta #1</strong> (el Titular).</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Pega la direccion en "Otorgar Acceso Temporal"</strong>
+                <p>En el panel del Titular, pega la direccion de la Cuenta #2 en el campo de verificador.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Escribe un proposito y click en "Otorgar (30 min)"</strong>
+                <p>Ejemplo de proposito: "Verificacion de identidad". Confirma la transaccion en MetaMask.</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F4E4; Simulacion de Grant Access</h4>
+            <div class="demo-row">
+                <input class="demo-input" placeholder="0x... direccion del verificador" id="simGrantAddr">
+                <input class="demo-input" placeholder="Proposito" id="simGrantPurpose" value="Verificacion de identidad" style="max-width:200px">
+            </div>
+            <button class="demo-btn" onclick="simulateGrant()">Simular Otorgar (30 min)</button>
+            <div class="demo-output" id="simGrantOutput"><span style="color:var(--muted)">Ingresa una direccion y presiona el boton para simular...</span></div>
+        </div>
+
+        <div class="callout warn">
+            <span class="icon">&#x23F1;</span>
+            <div><strong>El reloj empieza a correr!</strong> Desde el momento en que confirmas la transaccion,
+            el verificador tiene exactamente 30 minutos. La transaccion en Sepolia tarda unos ~12-15 segundos,
+            asi que el verificador tiene tiempo suficiente una vez confirmada.</div>
+        </div>
+
+        <div class="card">
+            <h3>Que pasa en el contrato?</h3>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><span class="cmt">// Se ejecuta grantAccess():</span>
+accessGrants[verificador] = AccessGrant({
+    authorized: <span class="kw">true</span>,
+    grantedAt:  <span class="num">block.timestamp</span>,        <span class="cmt">// ahora</span>
+    expiresAt:  <span class="num">block.timestamp + 1800</span>,  <span class="cmt">// ahora + 30 min</span>
+    purpose:    <span class="str">"Verificacion de identidad"</span>
+});
+
+<span class="cmt">// Se emite el evento:</span>
+<span class="kw">emit</span> <span class="fn">AccessGranted</span>(verificador, expiresAt, purpose);</pre>
+        </div>
+    `
+},
+{
+    id: 'view-data',
+    nav: 'Ver Dato (Verificador)',
+    section: 'Probar',
+    title: 'Paso 6: Ver el Dato como Verificador',
+    lead: 'Acceder antes de que expire el tiempo',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Cambia a la Cuenta #2 en MetaMask</strong>
+                <p>Click en el avatar de MetaMask y selecciona la Cuenta #2 (la que recibio acceso).</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>En la pagina web, click en "Conectar MetaMask" de nuevo</strong>
+                <p>El frontend detectara que esta cuenta NO es el owner y mostrara el <strong>Panel del Verificador</strong>.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Veras el countdown y el boton "Ver Dato Protegido"</strong>
+                <p>Si quedan segundos, el boton estara habilitado. Haz click para revelar el dato!</p>
+            </div>
+        </div>
+
+        <div class="countdown-container">
+            <p style="color:var(--muted);margin-bottom:10px;font-size:0.9em">Simulacion del countdown:</p>
+            <div class="countdown-ring">
+                <svg width="140" height="140">
+                    <circle class="bg-ring" cx="70" cy="70" r="58"></circle>
+                    <circle class="fg-ring" id="simCircle" cx="70" cy="70" r="58"
+                        stroke-dasharray="364.42" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="countdown-time" id="simTimer">30:00</div>
+            </div>
+            <button class="demo-btn" onclick="startSimCountdown()" style="margin-top:12px" id="simStartBtn">Iniciar Simulacion 30 min</button>
+            <button class="demo-btn" onclick="simViewData()" style="margin-top:12px;margin-left:8px" id="simViewBtn" disabled>Ver Dato</button>
+            <div id="simDataReveal" style="margin-top:16px"></div>
+        </div>
+
+        <div class="callout success">
+            <span class="icon">&#x2705;</span>
+            <div><strong>Si ves el dato:</strong> La divulgacion selectiva funciono! Solo esta cuenta,
+            en esta ventana de tiempo, pudo acceder. Nadie mas puede.</div>
+        </div>
+
+        <div class="callout danger">
+            <span class="icon">&#x274C;</span>
+            <div><strong>Si dice "Acceso expirado":</strong> Pasaron mas de 30 minutos. El Titular
+            tendria que otorgar acceso de nuevo. Esto demuestra la <strong>temporalidad</strong>.</div>
+        </div>
+    `
+},
+{
+    id: 'revoke',
+    nav: 'Revocar Acceso',
+    section: 'Probar',
+    title: 'Paso 7: Revocar Acceso',
+    lead: 'Demostrando la revocabilidad',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Vuelve a la Cuenta #1 (Titular)</strong>
+                <p>Cambia de cuenta en MetaMask a la del owner. Reconecta en el frontend.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Otorga acceso de nuevo a la Cuenta #2</strong>
+                <p>Repite el proceso de otorgar acceso para tener una ventana fresca de 30 min.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Inmediatamente revoca el acceso</strong>
+                <p>En la seccion "Revocar Acceso", pega la direccion de la Cuenta #2 y haz click en <strong>"Revocar"</strong>. Confirma en MetaMask.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Cambia a Cuenta #2 e intenta ver el dato</strong>
+                <p>Aunque no pasaron 30 minutos, el acceso fue revocado. El verificador vera <strong>"SIN ACCESO"</strong>.</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F6AB; Simulacion de Revocacion</h4>
+            <div id="revokeSimState" style="margin-bottom:12px">
+                <span class="tag" style="background:rgba(81,207,102,0.15);color:var(--green)">ACCESO ACTIVO</span>
+                <span style="color:var(--muted);font-size:0.85em"> — 28 min restantes</span>
+            </div>
+            <button class="demo-btn danger" onclick="simulateRevoke()" id="revokeSimBtn">Revocar Acceso</button>
+            <div class="demo-output" id="revokeSimOutput"><span style="color:var(--muted)">Presiona "Revocar" para simular la revocacion inmediata...</span></div>
+        </div>
+
+        <div class="card">
+            <h3>Que pasa en el contrato?</h3>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><span class="cmt">// revokeAccess() hace 2 cosas:</span>
+accessGrants[viewer].authorized = <span class="kw">false</span>;      <span class="cmt">// marca como NO autorizado</span>
+accessGrants[viewer].expiresAt = block.timestamp; <span class="cmt">// expira AHORA</span>
+
+<span class="cmt">// Cualquier intento de viewData() fallara:</span>
+<span class="fn">require</span>(grant.authorized, <span class="str">"No tienes autorizacion"</span>); <span class="cmt">// FALLA</span></pre>
+        </div>
+
+        <div class="callout info">
+            <span class="icon">&#x1F511;</span>
+            <div><strong>Principio SSI demostrado:</strong> El titular tiene control total y puede revocar
+            acceso en cualquier momento, sin importar cuanto tiempo quede en la ventana.</div>
+        </div>
+    `
+},
+{
+    id: 'summary',
+    nav: 'Resumen Final',
+    section: 'Cierre',
+    title: 'Resumen de la Demo',
+    lead: 'Todo lo que probamos y aprendimos',
+    html: `
+        <div class="card">
+            <h3>Principios SSI Verificados</h3>
+            <div class="checklist" id="summaryChecklist">
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Control del Titular</strong> — Solo el owner puede otorgar/revocar accesos y actualizar datos</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Divulgacion Selectiva</strong> — Solo la direccion autorizada pudo ver el dato, nadie mas</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Acceso Temporal</strong> — La ventana de 30 minutos expiro automaticamente</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Revocabilidad</strong> — El titular revoco el acceso antes de la expiracion</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Flujo completo que ejecutamos</h3>
+            <div class="timeline">
+                <div class="tl-item tl-green">
+                    <strong>Compilamos el contrato en Remix</strong>
+                    <p>Solidity ^0.8.19 -> Bytecode + ABI</p>
+                </div>
+                <div class="tl-item tl-green">
+                    <strong>Desplegamos en Sepolia via MetaMask</strong>
+                    <p>Constructor con dato personal y duracion de 30 min</p>
+                </div>
+                <div class="tl-item">
+                    <strong>Conectamos el frontend como Titular</strong>
+                    <p>Vimos el dato protegido y el panel de gestion</p>
+                </div>
+                <div class="tl-item tl-orange">
+                    <strong>Otorgamos acceso temporal a un verificador</strong>
+                    <p>30 minutos con proposito especifico</p>
+                </div>
+                <div class="tl-item">
+                    <strong>El verificador accedio al dato</strong>
+                    <p>Dentro de la ventana temporal</p>
+                </div>
+                <div class="tl-item tl-red">
+                    <strong>Revocamos el acceso anticipadamente</strong>
+                    <p>El titular cancelo antes de que expirara</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="callout info" style="margin:0">
+                <span class="icon">&#x1F393;</span>
+                <div><strong>Para seguir aprendiendo:</strong><br>
+                - Modifica <code>defaultDuration</code> a 60s<br>
+                - Prueba <code>grantAccessCustom</code> con duraciones distintas<br>
+                - Agrega mas cuentas verificadoras</div>
+            </div>
+            <div class="callout warn" style="margin:0">
+                <span class="icon">&#x26A0;</span>
+                <div><strong>Limitaciones educativas:</strong><br>
+                - Los datos <code>private</code> en Solidity no son secretos (se pueden leer del storage)<br>
+                - Una app real usaria cifrado off-chain<br>
+                - Esta es una demo conceptual, no para produccion</div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:30px">
+            <p style="font-size:1.3em;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                Demo completada!
+            </p>
+            <p style="color:var(--muted);margin-top:6px">Ahora entiendes como funciona la Identidad Digital Autosoberana en blockchain.</p>
+        </div>
+    `
+}
+];
+
+// =====================================================================
+// Rendering engine
+// =====================================================================
+let currentSlide = 0;
+
+function buildSidebar() {
+    const sb = document.getElementById('sidebar');
+    let currentSection = '';
+    let html = '';
+    slides.forEach((s, i) => {
+        if (s.section !== currentSection) {
+            currentSection = s.section;
+            html += `<div class="nav-section">${currentSection}</div>`;
+        }
+        html += `<div class="nav-item${i === 0 ? ' active' : ''}" data-index="${i}" onclick="goTo(${i})">
+            <div class="nav-num">${i + 1}</div>
+            <span>${s.nav}</span>
+        </div>`;
+    });
+    sb.innerHTML = html;
+}
+
+function renderSlide(index) {
+    const s = slides[index];
+    const main = document.getElementById('mainContent');
+    const isFirst = index === 0;
+    const isLast = index === slides.length - 1;
+
+    main.innerHTML = `
+        <div class="slide active" id="slide-${s.id}">
+            <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+                <span class="tag concept">${s.section}</span>
+            </div>
+            <h2>${s.title}</h2>
+            <p class="lead">${s.lead}</p>
+            ${s.html}
+            <div class="nav-buttons">
+                ${isFirst ? '' : `<button class="btn btn-secondary" onclick="prev()">&#x2190; Anterior</button>`}
+                <div style="flex:1"></div>
+                ${isLast ? '' : `<button class="btn btn-primary" onclick="next()">Siguiente &#x2192;</button>`}
+            </div>
+        </div>
+    `;
+
+    // Update nav
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+        el.classList.toggle('done', i < index);
+    });
+
+    // Update counter + progress
+    document.getElementById('stepCounter').textContent = `Paso ${index + 1} / ${slides.length}`;
+    document.getElementById('progressFill').style.width = `${((index + 1) / slides.length) * 100}%`;
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goTo(i) { currentSlide = i; renderSlide(i); }
+function next() { if (currentSlide < slides.length - 1) goTo(currentSlide + 1); }
+function prev() { if (currentSlide > 0) goTo(currentSlide - 1); }
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+});
+
+// =====================================================================
+// Interactive helpers
+// =====================================================================
+const CONTRACT_SOURCE = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+contract SSIAccessControl {
+
+    address public owner;
+    string  private personalData;
+    uint256 public  defaultDuration;
+
+    struct AccessGrant {
+        bool    authorized;
+        uint256 grantedAt;
+        uint256 expiresAt;
+        string  purpose;
+    }
+
+    mapping(address => AccessGrant) public accessGrants;
+    address[] public authorizedList;
+
+    event AccessGranted(address indexed viewer, uint256 expiresAt, string purpose);
+    event AccessRevoked(address indexed viewer, string reason);
+    event DataAccessed(address indexed viewer, uint256 timestamp);
+    event DataUpdated(uint256 timestamp);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Solo el titular puede realizar esta accion");
+        _;
+    }
+
+    modifier hasValidAccess() {
+        AccessGrant memory grant = accessGrants[msg.sender];
+        require(grant.authorized, "No tienes autorizacion");
+        require(block.timestamp <= grant.expiresAt, "Tu acceso ha expirado");
+        _;
+    }
+
+    constructor(string memory _personalData, uint256 _defaultDuration) {
+        owner = msg.sender;
+        personalData = _personalData;
+        defaultDuration = _defaultDuration;
+    }
+
+    function grantAccess(address _viewer, string memory _purpose) external onlyOwner {
+        require(_viewer != address(0), "Direccion invalida");
+        if (!accessGrants[_viewer].authorized) { authorizedList.push(_viewer); }
+        uint256 expiry = block.timestamp + defaultDuration;
+        accessGrants[_viewer] = AccessGrant(true, block.timestamp, expiry, _purpose);
+        emit AccessGranted(_viewer, expiry, _purpose);
+    }
+
+    function grantAccessCustom(
+        address _viewer, uint256 _seconds, string memory _purpose
+    ) external onlyOwner {
+        require(_viewer != address(0) && _seconds > 0);
+        if (!accessGrants[_viewer].authorized) { authorizedList.push(_viewer); }
+        uint256 expiry = block.timestamp + _seconds;
+        accessGrants[_viewer] = AccessGrant(true, block.timestamp, expiry, _purpose);
+        emit AccessGranted(_viewer, expiry, _purpose);
+    }
+
+    function revokeAccess(address _viewer, string memory _reason) external onlyOwner {
+        require(accessGrants[_viewer].authorized, "No tiene acceso");
+        accessGrants[_viewer].authorized = false;
+        accessGrants[_viewer].expiresAt = block.timestamp;
+        emit AccessRevoked(_viewer, _reason);
+    }
+
+    function updatePersonalData(string memory _newData) external onlyOwner {
+        personalData = _newData;
+        emit DataUpdated(block.timestamp);
+    }
+
+    function setDefaultDuration(uint256 _newDuration) external onlyOwner {
+        defaultDuration = _newDuration;
+    }
+
+    function viewData() external hasValidAccess returns (string memory) {
+        emit DataAccessed(msg.sender, block.timestamp);
+        return personalData;
+    }
+
+    function viewDataAsOwner() external view onlyOwner returns (string memory) {
+        return personalData;
+    }
+
+    function hasAccess(address _viewer) external view returns (bool) {
+        AccessGrant memory g = accessGrants[_viewer];
+        return g.authorized && block.timestamp <= g.expiresAt;
+    }
+
+    function remainingTime(address _viewer) external view returns (uint256) {
+        AccessGrant memory g = accessGrants[_viewer];
+        if (!g.authorized || block.timestamp > g.expiresAt) return 0;
+        return g.expiresAt - block.timestamp;
+    }
+
+    function getAccessDetails(address _viewer) external view returns (
+        bool authorized, uint256 grantedAt, uint256 expiresAt,
+        string memory purpose, uint256 secondsRemaining
+    ) {
+        AccessGrant memory g = accessGrants[_viewer];
+        uint256 rem = 0;
+        if (g.authorized && block.timestamp <= g.expiresAt) { rem = g.expiresAt - block.timestamp; }
+        return (g.authorized, g.grantedAt, g.expiresAt, g.purpose, rem);
+    }
+
+    function getAuthorizedCount() external view returns (uint256) {
+        return authorizedList.length;
+    }
+}`;
+
+function copyCode(btn) {
+    const pre = btn.parentElement;
+    const text = pre.textContent.replace('Copiar', '').replace('Copiar Todo', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar', 1500);
+    });
+}
+
+function copyFullContract() {
+    navigator.clipboard.writeText(CONTRACT_SOURCE).then(() => {
+        const btn = document.querySelector('#fullContractCode .copy-btn');
+        if (btn) { btn.textContent = 'Copiado!'; setTimeout(() => btn.textContent = 'Copiar Todo', 1500); }
+    });
+}
+
+// Deploy preview
+document.addEventListener('input', e => {
+    if (e.target.id === 'demoPersonalData') {
+        const el = document.getElementById('previewData');
+        if (el) el.textContent = e.target.value;
+    }
+    if (e.target.id === 'demoDuration') {
+        const el = document.getElementById('previewDuration');
+        if (el) el.textContent = e.target.value;
+    }
+});
+
+// Grant simulation
+function simulateGrant() {
+    const addr = document.getElementById('simGrantAddr')?.value.trim() || '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18';
+    const purpose = document.getElementById('simGrantPurpose')?.value.trim() || 'Verificacion';
+    const out = document.getElementById('simGrantOutput');
+    if (!out) return;
+    const now = Math.floor(Date.now() / 1000);
+    out.innerHTML = `<span style="color:var(--accent)">tx enviada...</span> Esperando confirmacion...`;
+    setTimeout(() => {
+        out.innerHTML = `<span style="color:var(--green)">&#x2713; Transaccion confirmada</span>
+
+<span style="color:var(--accent)">emit</span> AccessGranted(
+    viewer:    <span style="color:var(--orange)">${addr.slice(0,10)}...${addr.slice(-6)}</span>
+    expiresAt: <span style="color:var(--orange)">${now + 1800}</span>  <span style="color:var(--muted)">(ahora + 30 min)</span>
+    purpose:   <span style="color:var(--green)">"${purpose}"</span>
+)
+
+<span style="color:var(--muted)">El verificador tiene 30 minutos para llamar a viewData()</span>`;
+    }, 1500);
+}
+
+// Countdown simulation
+let simCountdownInterval = null;
+function startSimCountdown() {
+    const circle = document.getElementById('simCircle');
+    const text = document.getElementById('simTimer');
+    const viewBtn = document.getElementById('simViewBtn');
+    const startBtn = document.getElementById('simStartBtn');
+    const reveal = document.getElementById('simDataReveal');
+    if (!circle || !text) return;
+
+    if (simCountdownInterval) clearInterval(simCountdownInterval);
+    if (reveal) reveal.innerHTML = '';
+
+    const total = 30; // 30s para la simulacion (en el contrato real son 1800s = 30 min)
+    let remaining = total;
+    const circ = 364.42;
+    startBtn.disabled = true;
+    viewBtn.disabled = false;
+
+    function fmtSim(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+    function update() {
+        text.textContent = fmtSim(remaining);
+        circle.style.strokeDashoffset = circ * (1 - remaining / total);
+        circle.style.stroke = remaining <= 5 ? 'var(--red)' : 'var(--accent)';
+        text.style.color = remaining <= 5 ? 'var(--red)' : 'var(--text)';
+    }
+    update();
+
+    simCountdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(simCountdownInterval);
+            text.textContent = '0:00';
+            circle.style.strokeDashoffset = circ;
+            viewBtn.disabled = true;
+            startBtn.disabled = false;
+            if (reveal) reveal.innerHTML = '<div style="background:rgba(255,107,107,0.1);border:2px solid var(--red);border-radius:12px;padding:16px;text-align:center;color:var(--red);font-weight:600">Tiempo agotado — acceso expirado</div>';
+        } else { update(); }
+    }, 1000);
+}
+
+function simViewData() {
+    const reveal = document.getElementById('simDataReveal');
+    const viewBtn = document.getElementById('simViewBtn');
+    if (!reveal) return;
+    viewBtn.disabled = true;
+    reveal.innerHTML = '<div style="background:rgba(0,210,255,0.1);border:2px solid var(--accent);border-radius:12px;padding:20px;text-align:center;animation:fadeIn 0.5s"><strong style="font-size:1.3em">Cedula: 1-1234-5678</strong><br><span style="color:var(--green);font-size:0.85em">Dato revelado exitosamente</span></div>';
+}
+
+// Revoke simulation
+function simulateRevoke() {
+    const state = document.getElementById('revokeSimState');
+    const out = document.getElementById('revokeSimOutput');
+    const btn = document.getElementById('revokeSimBtn');
+    if (!state || !out) return;
+    btn.disabled = true;
+    out.innerHTML = '<span style="color:var(--accent)">tx enviada...</span> Revocando...';
+    setTimeout(() => {
+        state.innerHTML = '<span class="tag" style="background:rgba(255,107,107,0.15);color:var(--red)">ACCESO REVOCADO</span> <span style="color:var(--muted);font-size:0.85em"> — revocado por el titular</span>';
+        out.innerHTML = `<span style="color:var(--red)">&#x1F6AB; Acceso revocado exitosamente</span>
+
+<span style="color:var(--accent)">emit</span> AccessRevoked(
+    viewer: <span style="color:var(--orange)">0x742d...f2bD18</span>
+    reason: <span style="color:var(--green)">"Revocado por el titular"</span>
+)
+
+<span style="color:var(--muted)">Si el verificador intenta viewData() ahora:
+  -> require(grant.authorized) -> REVERT "No tienes autorizacion"</span>`;
+        setTimeout(() => { btn.disabled = false; }, 2000);
+    }, 1200);
+}
+
+// Checklist
+function toggleCheck(label) {
+    setTimeout(() => {
+        const cb = label.querySelector('input[type="checkbox"]');
+        label.classList.toggle('checked', cb.checked);
+    }, 10);
+}
+
+// =====================================================================
+// Init
+// =====================================================================
+buildSidebar();
+renderSlide(0);
+</script>
+</body>
+</html>
