@@ -951,25 +951,114 @@ const slides = [
     `
 },
 {
+    id: 'homework-intro',
+    nav: 'Tarea para la Casa',
+    section: 'Tarea',
+    title: 'Tarea: Probar el Flujo Completo',
+    lead: 'Instrucciones para completar la demo por tu cuenta',
+    html: `
+        <div class="callout warn">
+            <span class="icon">&#x1F4DA;</span>
+            <div><strong>Fin de la sesion en clase.</strong> Hasta aqui llegamos juntos: clonamos el repo,
+            compilamos el contrato, lo desplegamos en Sepolia y lo verificamos en Etherscan.<br><br>
+            Lo que sigue es tu <strong>tarea para la casa</strong>: probar el flujo completo de SSI
+            usando el frontend web.</div>
+        </div>
+
+        <div class="card">
+            <h3>Lo que necesitas</h3>
+            <div class="grid-2">
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--green)">&#x2713;</div>
+                    <div class="step-content">
+                        <strong>Tu contrato desplegado</strong>
+                        <p>La direccion 0x... que obtuviste en clase</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--green)">&#x2713;</div>
+                    <div class="step-content">
+                        <strong>MetaMask con 2 cuentas</strong>
+                        <p>Cuenta #1 (Owner) y Cuenta #2 (Verificador)</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--green)">&#x2713;</div>
+                    <div class="step-content">
+                        <strong>SepoliaETH en Cuenta #1</strong>
+                        <p>Para pagar gas de las transacciones</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num" style="background:var(--accent)">&#x1F310;</div>
+                    <div class="step-content">
+                        <strong>Frontend Web</strong>
+                        <p><a href="https://alejoherrera.github.io/ssi-demo-sepolia/" target="_blank" style="color:var(--accent)">alejoherrera.github.io/ssi-demo-sepolia</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span class="icon">&#x1F4A1;</span>
+            <div><strong>Crear segunda cuenta en MetaMask:</strong> Si solo tienes una cuenta, abre MetaMask >
+            click en tu avatar (arriba) > <strong>"Add account"</strong> > "Create a new account". Copia su direccion (0x...).</div>
+        </div>
+
+        <div class="card">
+            <h3>Resumen de pasos de la tarea</h3>
+            <div class="timeline">
+                <div class="tl-item tl-green">
+                    <strong>Paso 1: Conectar como Titular</strong>
+                    <p>Abrir el frontend, pegar la direccion del contrato, conectar con la cuenta Owner</p>
+                </div>
+                <div class="tl-item">
+                    <strong>Paso 2: Otorgar acceso temporal</strong>
+                    <p>Pegar la direccion de la Cuenta #2 y otorgar 30 min de acceso</p>
+                </div>
+                <div class="tl-item tl-orange">
+                    <strong>Paso 3: Ver dato como Verificador</strong>
+                    <p>Cambiar a Cuenta #2, reconectar, ver el countdown y revelar el dato</p>
+                </div>
+                <div class="tl-item tl-red">
+                    <strong>Paso 4: Revocar acceso</strong>
+                    <p>Volver al Owner, otorgar de nuevo, revocar inmediatamente y verificar que ya no hay acceso</p>
+                </div>
+            </div>
+        </div>
+
+        <p style="color:var(--muted);font-size:0.9em;text-align:center;margin-top:20px">
+            Las siguientes slides detallan cada paso. Sigue adelante &#x27A1;
+        </p>
+    `
+},
+{
     id: 'connect-frontend',
     nav: 'Conectar Frontend',
-    section: 'Probar',
-    title: 'Paso 5: Conectar el Frontend',
+    section: 'Tarea',
+    title: 'Tarea Paso 1: Conectar el Frontend',
     lead: 'Usar la interfaz web como Titular',
     html: `
         <div class="step-box">
             <div class="step-num">1</div>
             <div class="step-content">
-                <strong>Abre index.html en tu navegador</strong>
-                <p>Abre el archivo <code>frontend/index.html</code> directamente en Chrome o Firefox (doble click o arrastrar al navegador).</p>
+                <strong>Abre el frontend en tu navegador</strong>
+                <p>Navega a la aplicacion web publicada en GitHub Pages:</p>
             </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F310; Abrir Frontend</h4>
+            <button class="demo-btn" onclick="window.open('https://alejoherrera.github.io/ssi-demo-sepolia/','_blank')">
+                Abrir alejoherrera.github.io/ssi-demo-sepolia
+            </button>
         </div>
 
         <div class="step-box">
             <div class="step-num">2</div>
             <div class="step-content">
                 <strong>Pega la direccion del contrato</strong>
-                <p>En el campo "Direccion del contrato desplegado en Sepolia", pega la direccion que copiaste de Remix.</p>
+                <p>En el campo "Direccion del contrato desplegado en Sepolia", pega la direccion que obtuviste al hacer deploy en clase.</p>
             </div>
         </div>
 
@@ -977,7 +1066,8 @@ const slides = [
             <div class="step-num">3</div>
             <div class="step-content">
                 <strong>Click en "Conectar MetaMask"</strong>
-                <p>Asegurate de estar con la <strong>misma cuenta</strong> que usaste para el deploy. MetaMask pedira confirmar la conexion.</p>
+                <p>Asegurate de estar con la <strong>misma cuenta</strong> que usaste para el deploy (Cuenta #1 / Owner).
+                MetaMask debe estar en <strong>red Sepolia</strong>.</p>
             </div>
         </div>
 
@@ -1025,14 +1115,14 @@ const slides = [
 {
     id: 'grant-access',
     nav: 'Otorgar Acceso',
-    section: 'Probar',
-    title: 'Paso 6: Otorgar Acceso Temporal',
+    section: 'Tarea',
+    title: 'Tarea Paso 2: Otorgar Acceso Temporal',
     lead: 'Simular la divulgacion selectiva',
     html: `
         <div class="callout info">
             <span class="icon">&#x1F4A1;</span>
-            <div>Para esta demo necesitas <strong>2 cuentas en MetaMask</strong>. Si solo tienes una,
-            crea otra en MetaMask > click en el avatar > "Add account".</div>
+            <div>Necesitas <strong>2 cuentas en MetaMask</strong>. Si solo tienes una,
+            crea otra: MetaMask > click en tu avatar > <strong>"Add account"</strong>.</div>
         </div>
 
         <div class="step-box">
@@ -1057,16 +1147,6 @@ const slides = [
                 <strong>Escribe un proposito y click en "Otorgar (30 min)"</strong>
                 <p>Ejemplo de proposito: "Verificacion de identidad". Confirma la transaccion en MetaMask.</p>
             </div>
-        </div>
-
-        <div class="demo-area">
-            <h4>&#x1F4E4; Simulacion de Grant Access</h4>
-            <div class="demo-row">
-                <input class="demo-input" placeholder="0x... direccion del verificador" id="simGrantAddr">
-                <input class="demo-input" placeholder="Proposito" id="simGrantPurpose" value="Verificacion de identidad" style="max-width:200px">
-            </div>
-            <button class="demo-btn" onclick="simulateGrant()">Simular Otorgar (30 min)</button>
-            <div class="demo-output" id="simGrantOutput"><span style="color:var(--muted)">Ingresa una direccion y presiona el boton para simular...</span></div>
         </div>
 
         <div class="callout warn">
@@ -1094,8 +1174,8 @@ accessGrants[verificador] = AccessGrant({
 {
     id: 'view-data',
     nav: 'Ver Dato (Verificador)',
-    section: 'Probar',
-    title: 'Paso 7: Ver el Dato como Verificador',
+    section: 'Tarea',
+    title: 'Tarea Paso 3: Ver el Dato como Verificador',
     lead: 'Acceder antes de que expire el tiempo',
     html: `
         <div class="step-box">
@@ -1109,7 +1189,7 @@ accessGrants[verificador] = AccessGrant({
         <div class="step-box">
             <div class="step-num">2</div>
             <div class="step-content">
-                <strong>En la pagina web, click en "Conectar MetaMask" de nuevo</strong>
+                <strong>Recarga la pagina y click en "Conectar MetaMask" de nuevo</strong>
                 <p>El frontend detectara que esta cuenta NO es el owner y mostrara el <strong>Panel del Verificador</strong>.</p>
             </div>
         </div>
@@ -1118,7 +1198,7 @@ accessGrants[verificador] = AccessGrant({
             <div class="step-num">3</div>
             <div class="step-content">
                 <strong>Veras el countdown y el boton "Ver Dato Protegido"</strong>
-                <p>Si quedan segundos, el boton estara habilitado. Haz click para revelar el dato!</p>
+                <p>Si quedan minutos, el boton estara habilitado. Haz click para revelar el dato!</p>
             </div>
         </div>
 
@@ -1132,7 +1212,7 @@ accessGrants[verificador] = AccessGrant({
                 </svg>
                 <div class="countdown-time" id="simTimer">30:00</div>
             </div>
-            <button class="demo-btn" onclick="startSimCountdown()" style="margin-top:12px" id="simStartBtn">Iniciar Simulacion 30 min</button>
+            <button class="demo-btn" onclick="startSimCountdown()" style="margin-top:12px" id="simStartBtn">Iniciar Simulacion</button>
             <button class="demo-btn" onclick="simViewData()" style="margin-top:12px;margin-left:8px" id="simViewBtn" disabled>Ver Dato</button>
             <div id="simDataReveal" style="margin-top:16px"></div>
         </div>
@@ -1153,15 +1233,15 @@ accessGrants[verificador] = AccessGrant({
 {
     id: 'revoke',
     nav: 'Revocar Acceso',
-    section: 'Probar',
-    title: 'Paso 8: Revocar Acceso',
+    section: 'Tarea',
+    title: 'Tarea Paso 4: Revocar Acceso',
     lead: 'Demostrando la revocabilidad',
     html: `
         <div class="step-box">
             <div class="step-num">1</div>
             <div class="step-content">
                 <strong>Vuelve a la Cuenta #1 (Titular)</strong>
-                <p>Cambia de cuenta en MetaMask a la del owner. Reconecta en el frontend.</p>
+                <p>Cambia de cuenta en MetaMask a la del owner. Recarga y reconecta en el frontend.</p>
             </div>
         </div>
 
@@ -1221,10 +1301,10 @@ accessGrants[viewer].expiresAt = block.timestamp; <span class="cmt">// expira AH
     nav: 'Resumen Final',
     section: 'Cierre',
     title: 'Resumen de la Demo',
-    lead: 'Todo lo que probamos y aprendimos',
+    lead: 'Lo que aprendimos y lo que debes entregar',
     html: `
         <div class="card">
-            <h3>Principios SSI Verificados</h3>
+            <h3>Principios SSI que debes verificar en la tarea</h3>
             <div class="checklist" id="summaryChecklist">
                 <label onclick="toggleCheck(this)">
                     <input type="checkbox">
@@ -1246,57 +1326,92 @@ accessGrants[viewer].expiresAt = block.timestamp; <span class="cmt">// expira AH
         </div>
 
         <div class="card">
-            <h3>Flujo completo que ejecutamos</h3>
+            <h3>Flujo completo</h3>
             <div class="timeline">
                 <div class="tl-item tl-green">
-                    <strong>Compilamos el contrato en Remix</strong>
+                    <strong>En clase: Compilamos el contrato en Remix</strong>
                     <p>Solidity ^0.8.19 -> Bytecode + ABI</p>
                 </div>
                 <div class="tl-item tl-green">
-                    <strong>Desplegamos en Sepolia via MetaMask</strong>
+                    <strong>En clase: Desplegamos en Sepolia via MetaMask</strong>
                     <p>Constructor con dato personal y duracion de 30 min</p>
                 </div>
-                <div class="tl-item">
-                    <strong>Conectamos el frontend como Titular</strong>
-                    <p>Vimos el dato protegido y el panel de gestion</p>
+                <div class="tl-item tl-green">
+                    <strong>En clase: Verificamos en Etherscan</strong>
+                    <p>Vimos la transaccion y discutimos la transparencia de blockchain</p>
                 </div>
                 <div class="tl-item tl-orange">
-                    <strong>Otorgamos acceso temporal a un verificador</strong>
-                    <p>30 minutos con proposito especifico</p>
+                    <strong>Tarea: Conectar frontend y otorgar acceso</strong>
+                    <p>Usar GitHub Pages, conectar MetaMask, autorizar verificador</p>
                 </div>
                 <div class="tl-item">
-                    <strong>El verificador accedio al dato</strong>
-                    <p>Dentro de la ventana temporal</p>
+                    <strong>Tarea: Verificador accede al dato</strong>
+                    <p>Cambiar de cuenta, ver countdown, revelar dato</p>
                 </div>
                 <div class="tl-item tl-red">
-                    <strong>Revocamos el acceso anticipadamente</strong>
-                    <p>El titular cancelo antes de que expirara</p>
+                    <strong>Tarea: Revocar acceso</strong>
+                    <p>Demostrar que el titular puede cancelar en cualquier momento</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Entregables sugeridos</h3>
+            <div class="grid-2">
+                <div class="step-box" style="margin:0">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <strong>Screenshot como Titular</strong>
+                        <p>Mostrando el panel del owner con tu dato protegido visible</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <strong>Screenshot del grant en Etherscan</strong>
+                        <p>La transaccion de grantAccess confirmada en sepolia.etherscan.io</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <strong>Screenshot como Verificador</strong>
+                        <p>Mostrando el dato revelado con el countdown activo</p>
+                    </div>
+                </div>
+                <div class="step-box" style="margin:0">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <strong>Screenshot de acceso revocado</strong>
+                        <p>Mostrando "SIN ACCESO" despues de la revocacion</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="grid-2">
             <div class="callout info" style="margin:0">
-                <span class="icon">&#x1F393;</span>
-                <div><strong>Para seguir aprendiendo:</strong><br>
-                - Modifica <code>defaultDuration</code> a 60s<br>
-                - Prueba <code>grantAccessCustom</code> con duraciones distintas<br>
-                - Agrega mas cuentas verificadoras</div>
+                <span class="icon">&#x1F517;</span>
+                <div><strong>Links utiles:</strong><br>
+                - <a href="https://alejoherrera.github.io/ssi-demo-sepolia/" target="_blank" style="color:var(--accent)">Frontend (GitHub Pages)</a><br>
+                - <a href="https://sepolia.etherscan.io" target="_blank" style="color:var(--accent)">Sepolia Etherscan</a><br>
+                - <a href="https://remix.ethereum.org" target="_blank" style="color:var(--accent)">Remix IDE</a><br>
+                - <a href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia" target="_blank" style="color:var(--accent)">Faucet SepoliaETH</a></div>
             </div>
             <div class="callout warn" style="margin:0">
                 <span class="icon">&#x26A0;</span>
-                <div><strong>Limitaciones educativas:</strong><br>
-                - Los datos <code>private</code> en Solidity no son secretos (se pueden leer del storage)<br>
-                - Una app real usaria cifrado off-chain<br>
-                - Esta es una demo conceptual, no para produccion</div>
+                <div><strong>Recuerda:</strong><br>
+                - Los datos <code>private</code> en blockchain son visibles para todos<br>
+                - Esta demo es educativa, no para produccion<br>
+                - En SSI real se usa cifrado + Verifiable Credentials + ZK Proofs</div>
             </div>
         </div>
 
         <div style="text-align:center;margin-top:30px">
             <p style="font-size:1.3em;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-                Demo completada!
+                Buena suerte con la tarea!
             </p>
-            <p style="color:var(--muted);margin-top:6px">Ahora entiendes como funciona la Identidad Digital Autosoberana en blockchain.</p>
+            <p style="color:var(--muted);margin-top:6px">Cualquier duda, revisa esta presentacion de nuevo o consulta al profesor.</p>
         </div>
     `
 }
