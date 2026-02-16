@@ -840,10 +840,121 @@ const slides = [
     `
 },
 {
+    id: 'etherscan',
+    nav: 'Verificar en Etherscan',
+    section: 'Compilar & Deploy',
+    title: 'Paso 4: Verificar en Etherscan',
+    lead: 'Ver tu contrato en la blockchain y entender la transparencia',
+    html: `
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Copia el transaction hash de Remix</strong>
+                <p>En la consola de Remix (abajo), busca el hash de la transaccion del deploy. Se ve como <code>0xe6cc...5f8a</code>.</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Abre Sepolia Etherscan</strong>
+                <p>Navega a <strong>sepolia.etherscan.io</strong> y pega el transaction hash en la barra de busqueda.</p>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <h4>&#x1F310; Abrir Etherscan Sepolia</h4>
+            <div class="demo-row">
+                <input class="demo-input" id="etherscanTxHash" placeholder="Pega tu transaction hash aqui (0x...)">
+                <button class="demo-btn" onclick="openEtherscan()">Abrir en Etherscan</button>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Que veras en Etherscan?</strong>
+                <p>La pagina de la transaccion muestra:</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Datos de la Transaccion</h3>
+                <p style="font-size:0.88em;color:var(--muted);line-height:1.8">
+                    <strong style="color:#fff">Status:</strong> Success<br>
+                    <strong style="color:#fff">From:</strong> Tu direccion (el owner)<br>
+                    <strong style="color:#fff">To:</strong> [Contract Creation]<br>
+                    <strong style="color:#fff">Value:</strong> 0 ETH<br>
+                    <strong style="color:#fff">Gas Used:</strong> ~500,000 gas
+                </p>
+            </div>
+            <div class="card">
+                <h3>Direccion del Contrato</h3>
+                <p style="font-size:0.88em;color:var(--muted);line-height:1.6">
+                    Haz click en la direccion que aparece en el campo <strong style="color:#fff">"To"</strong> o
+                    <strong style="color:#fff">"Contract Created"</strong> para ver la pagina del contrato con
+                    su balance, transacciones y codigo.
+                </p>
+                <p style="font-size:0.82em;color:var(--accent);margin-top:8px">
+                    &#x1F4CB; Copia esta direccion — la necesitaras para el frontend.
+                </p>
+            </div>
+        </div>
+
+        <div class="callout danger">
+            <span class="icon">&#x26A0;</span>
+            <div>
+                <strong>IMPORTANTE: Los datos en blockchain son publicos!</strong><br><br>
+                Aunque <code>personalData</code> esta marcada como <code>private</code> en Solidity,
+                esto <strong>solo impide que otros contratos la lean</strong>. Cualquier persona puede
+                ver el contenido leyendo directamente el storage de la blockchain con herramientas como
+                Etherscan o <code>eth_getStorageAt</code>.<br><br>
+                <strong>La blockchain es transparente por diseno.</strong> Todo lo almacenado es visible para todos.
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Entonces como protegen los datos los sistemas SSI reales?</h3>
+            <div class="principle-grid">
+                <div class="principle-card">
+                    <div class="p-icon">&#x1F510;</div>
+                    <div class="p-title">Cifrado Off-Chain</div>
+                    <div class="p-desc">El dato se cifra con la clave publica del titular antes de almacenarlo. Solo quien tenga la clave privada puede descifrarlo.</div>
+                </div>
+                <div class="principle-card">
+                    <div class="p-icon">&#x1F5C3;</div>
+                    <div class="p-title">Hash en Blockchain</div>
+                    <div class="p-desc">Solo se guarda un hash (huella digital) del dato en blockchain como prueba. El dato real vive fuera (IPFS, servidores privados).</div>
+                </div>
+                <div class="principle-card">
+                    <div class="p-icon">&#x1F4C4;</div>
+                    <div class="p-title">Verifiable Credentials</div>
+                    <div class="p-desc">Estandares W3C donde el emisor firma un credential, el titular lo guarda en su wallet y lo presenta selectivamente.</div>
+                </div>
+                <div class="principle-card">
+                    <div class="p-icon">&#x1F6E1;</div>
+                    <div class="p-title">Zero-Knowledge Proofs</div>
+                    <div class="p-desc">Demostrar algo ("soy mayor de 18") sin revelar el dato exacto (tu fecha de nacimiento). Privacidad maxima.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span class="icon">&#x1F393;</span>
+            <div>
+                <strong>En esta demo</strong> usamos texto plano como simplificacion educativa.
+                El contrato demuestra la <strong>logica de control de acceso</strong> (quien, cuando, por cuanto tiempo),
+                no el cifrado. En produccion, combinarias ambos: control de acceso + cifrado.
+            </div>
+        </div>
+    `
+},
+{
     id: 'connect-frontend',
     nav: 'Conectar Frontend',
     section: 'Probar',
-    title: 'Paso 4: Conectar el Frontend',
+    title: 'Paso 5: Conectar el Frontend',
     lead: 'Usar la interfaz web como Titular',
     html: `
         <div class="step-box">
@@ -915,7 +1026,7 @@ const slides = [
     id: 'grant-access',
     nav: 'Otorgar Acceso',
     section: 'Probar',
-    title: 'Paso 5: Otorgar Acceso Temporal',
+    title: 'Paso 6: Otorgar Acceso Temporal',
     lead: 'Simular la divulgacion selectiva',
     html: `
         <div class="callout info">
@@ -984,7 +1095,7 @@ accessGrants[verificador] = AccessGrant({
     id: 'view-data',
     nav: 'Ver Dato (Verificador)',
     section: 'Probar',
-    title: 'Paso 6: Ver el Dato como Verificador',
+    title: 'Paso 7: Ver el Dato como Verificador',
     lead: 'Acceder antes de que expire el tiempo',
     html: `
         <div class="step-box">
@@ -1043,7 +1154,7 @@ accessGrants[verificador] = AccessGrant({
     id: 'revoke',
     nav: 'Revocar Acceso',
     section: 'Probar',
-    title: 'Paso 7: Revocar Acceso',
+    title: 'Paso 8: Revocar Acceso',
     lead: 'Demostrando la revocabilidad',
     html: `
         <div class="step-box">
@@ -1372,6 +1483,15 @@ contract SSIAccessControl {
         return authorizedList.length;
     }
 }`;
+
+function openEtherscan() {
+    const hash = document.getElementById('etherscanTxHash')?.value.trim();
+    if (hash) {
+        window.open('https://sepolia.etherscan.io/tx/' + hash, '_blank');
+    } else {
+        window.open('https://sepolia.etherscan.io', '_blank');
+    }
+}
 
 function copyCode(btn) {
     const pre = btn.parentElement;
