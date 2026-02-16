@@ -538,6 +538,140 @@ const slides = [
     `
 },
 {
+    id: 'setup',
+    nav: 'Preparacion',
+    section: 'Preparacion',
+    title: 'Preparacion del Entorno',
+    lead: 'Instalar y configurar las herramientas necesarias',
+    html: `
+        <div class="card">
+            <h3>Herramientas que necesitas</h3>
+            <div class="checklist" id="setupChecklist">
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Google Chrome</strong> — Navegador recomendado (Firefox tambien funciona)</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>MetaMask</strong> — Extension de navegador para wallet Ethereum</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>Red Sepolia configurada</strong> — Testnet de Ethereum</span>
+                </label>
+                <label onclick="toggleCheck(this)">
+                    <input type="checkbox">
+                    <span><strong>SepoliaETH</strong> — ETH de prueba para pagar gas</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>1. Instalar MetaMask</h3>
+            <div class="step-box">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <strong>Instala la extension de MetaMask</strong>
+                    <p>Ve a <strong>metamask.io</strong> y haz click en "Download". Selecciona tu navegador (Chrome/Firefox) e instala la extension.</p>
+                </div>
+            </div>
+            <div class="demo-area" style="margin-top:0">
+                <button class="demo-btn" onclick="window.open('https://metamask.io/download/','_blank')">
+                    Ir a metamask.io/download
+                </button>
+            </div>
+            <div class="step-box">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <strong>Crea una wallet</strong>
+                    <p>Al abrir MetaMask por primera vez, selecciona <strong>"Create a new wallet"</strong>.
+                    Crea una contrasena y <strong>guarda tu frase semilla</strong> (12 palabras) en un lugar seguro.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>2. Configurar la Red Sepolia</h3>
+            <p style="color:var(--muted);font-size:0.9em;margin-bottom:14px">
+                Sepolia es una testnet (red de pruebas) de Ethereum. Las transacciones no cuestan dinero real.
+            </p>
+            <div class="step-box">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <strong>Abre MetaMask y activa las redes de prueba</strong>
+                    <p>Click en el selector de red (arriba, dice "Ethereum Mainnet") >
+                    <strong>"Show test networks"</strong> o ve a Settings > Advanced > <strong>Show test networks: ON</strong></p>
+                </div>
+            </div>
+            <div class="step-box">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <strong>Selecciona Sepolia</strong>
+                    <p>En el selector de red, ahora veras <strong>"Sepolia test network"</strong>. Haz click para cambiar a ella.
+                    Veras "SepoliaETH" como moneda y tu balance en 0.</p>
+                </div>
+            </div>
+
+            <div class="callout info">
+                <span class="icon">&#x1F4A1;</span>
+                <div>Si no ves Sepolia en la lista, puedes agregarla manualmente:
+                <br>Settings > Networks > Add Network > buscar <strong>"Sepolia"</strong> > Add.
+                <br><br>
+                <strong>Datos de la red:</strong><br>
+                <code style="font-size:0.85em">
+                Network Name: Sepolia<br>
+                RPC URL: https://rpc.sepolia.org<br>
+                Chain ID: 11155111<br>
+                Symbol: SepoliaETH<br>
+                Explorer: https://sepolia.etherscan.io
+                </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>3. Obtener SepoliaETH (gas)</h3>
+            <p style="color:var(--muted);font-size:0.9em;margin-bottom:14px">
+                Necesitas SepoliaETH para pagar el gas de las transacciones. Es gratis — se obtiene de un "faucet".
+            </p>
+            <div class="step-box">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <strong>Copia tu direccion de MetaMask</strong>
+                    <p>Click en tu cuenta en MetaMask para copiar la direccion (0x...).</p>
+                </div>
+            </div>
+            <div class="step-box">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <strong>Ve a un faucet y solicita SepoliaETH</strong>
+                    <p>Pega tu direccion y solicita ETH de prueba. Tarda ~30 segundos en llegar.</p>
+                </div>
+            </div>
+            <div class="demo-area" style="margin-top:0">
+                <h4>&#x1F4B0; Faucets disponibles</h4>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="demo-btn" onclick="window.open('https://cloud.google.com/application/web3/faucet/ethereum/sepolia','_blank')">
+                        Google Cloud Faucet
+                    </button>
+                    <button class="demo-btn" onclick="window.open('https://www.alchemy.com/faucets/ethereum-sepolia','_blank')" style="background:linear-gradient(135deg,var(--accent2),#9b59b6)">
+                        Alchemy Faucet
+                    </button>
+                    <button class="demo-btn" onclick="window.open('https://sepolia-faucet.pk910.de/','_blank')" style="background:linear-gradient(135deg,var(--orange),#e67e22)">
+                        pk910 PoW Faucet
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout success">
+            <span class="icon">&#x2705;</span>
+            <div><strong>Listo!</strong> Si ya tienes MetaMask instalado, conectado a Sepolia y con algo de SepoliaETH,
+            estas preparado para compilar y desplegar el contrato.</div>
+        </div>
+    `
+},
+{
     id: 'remix-open',
     nav: 'Clonar en Remix',
     section: 'Compilar & Deploy',
