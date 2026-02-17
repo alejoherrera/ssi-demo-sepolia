@@ -847,8 +847,13 @@ const slides = [
                 La blockchain es <strong>publica y permanente</strong>. Aunque el dato se marca como <code>private</code> en Solidity,
                 <strong>cualquier persona puede leerlo</strong> directamente del storage de la blockchain.
             </p>
+            <p style="font-size:0.95em;color:var(--muted);line-height:1.6;max-width:600px;margin:12px auto 0;font-style:italic;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px">
+                Este es un caso didactico. En la practica, <strong style="color:#fff">nunca se almacenan datos personales en blockchain</strong>.
+                La blockchain debe usarse unicamente como una <strong style="color:var(--accent)">capa de control y trazabilidad de acceso</strong>
+                a los datos, que deben estar <strong style="color:var(--accent)">off-chain</strong> (fuera de la cadena).
+            </p>
             <p style="font-size:1.05em;color:#fff;margin-top:14px;font-weight:600">
-                Usa datos ficticios de ejemplo:
+                Para esta demo, usa datos ficticios:
             </p>
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px">
                 <span class="tag" style="background:rgba(255,255,255,0.1);color:var(--text);font-size:0.9em;padding:6px 14px">Cedula: 0-0000-0000</span>
