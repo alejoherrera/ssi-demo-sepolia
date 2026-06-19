@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infografía — Código comentado del contrato SSI (SSIAccessControl.sol)</title>
+<style>
+  :root {
+    --azul:#0b3d91; --azulc:#1e6fd9; --gris:#f4f6fa; --borde:#d0d7e2; --texto:#1a1a1a;
+    --control:#1565c0;   /* control del titular */
+    --selectiva:#00897b; /* divulgacion selectiva */
+    --temporal:#ef6c00;  /* temporalidad */
+    --revoca:#c62828;    /* revocabilidad */
+    --neutro:#5e35b1;    /* utilidad/lectura */
+  }
+  * { box-sizing: border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--texto);
+    background:var(--gris); margin:0; line-height:1.5; }
+  header { background:linear-gradient(135deg,var(--azul),var(--azulc)); color:#fff; padding:32px 20px; text-align:center; }
+  header h1 { margin:0 0 6px; font-size:1.6em; }
+  header p { margin:0; opacity:.92; font-size:.95em; }
+  main { max-width:1100px; margin:0 auto; padding:22px; }
+  .leyenda { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 26px; }
+  .leyenda .item { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--borde);
+    border-radius:20px; padding:6px 14px; font-size:.86em; font-weight:600; }
+  .dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
+  .d-control{background:var(--control)} .d-selectiva{background:var(--selectiva)}
+  .d-temporal{background:var(--temporal)} .d-revoca{background:var(--revoca)} .d-neutro{background:var(--neutro)}
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:16px; }
+  .card { background:#fff; border:1px solid var(--borde); border-radius:10px; overflow:hidden;
+    box-shadow:0 2px 6px rgba(0,0,0,.05); display:flex; flex-direction:column; }
+  .card .tope { padding:8px 14px; color:#fff; font-weight:700; font-size:.92em; display:flex; justify-content:space-between; align-items:center; }
+  .card .tag { font-size:.7em; background:rgba(255,255,255,.25); padding:2px 8px; border-radius:10px; font-weight:600; }
+  .t-control{background:var(--control)} .t-selectiva{background:var(--selectiva)}
+  .t-temporal{background:var(--temporal)} .t-revoca{background:var(--revoca)} .t-neutro{background:var(--neutro)}
+  pre { margin:0; padding:12px 14px; background:#0f1b2d; color:#e6edf3; font-family:"Courier New",monospace;
+    font-size:.8em; overflow-x:auto; line-height:1.45; }
+  pre .kw{color:#79c0ff} pre .ty{color:#7ee787} pre .cm{color:#8b949e; font-style:italic} pre .st{color:#ffa657}
+  .card .nota { padding:11px 14px; font-size:.86em; background:#fafbfd; border-top:1px solid var(--borde); }
+  .card .nota strong { color:var(--azul); }
+
+  h2 { color:var(--azul); border-bottom:2px solid var(--borde); padding-bottom:6px; margin:34px 0 14px; }
+  .flujo { display:flex; flex-wrap:wrap; align-items:stretch; gap:10px; margin:14px 0; }
+  .paso { flex:1; min-width:150px; background:#fff; border:1px solid var(--borde); border-radius:10px; padding:12px; text-align:center; }
+  .paso .n { display:inline-block; width:26px; height:26px; line-height:26px; border-radius:50%; background:var(--azul); color:#fff; font-weight:700; font-size:.85em; }
+  .paso h4 { margin:8px 0 4px; font-size:.95em; color:var(--azul); }
+  .paso p { margin:0; font-size:.8em; color:#555; }
+  .flecha { align-self:center; color:var(--azulc); font-weight:700; font-size:1.3em; }
+  footer { text-align:center; padding:22px; color:#777; font-size:.8em; }
+  @media print { body{background:#fff} header{background:var(--azul)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .card,.paso,.leyenda .item{break-inside:avoid} pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Anatomía del contrato <code>SSIAccessControl.sol</code></h1>
+  <p>Código comentado: cómo un smart contract demuestra los 4 principios de la Identidad Digital Autosoberana (SSI) · Sepolia</p>
+</header>
+
+<main>
+  <div class="leyenda">
+    <span class="item"><span class="dot d-control"></span> Control del titular</span>
+    <span class="item"><span class="dot d-selectiva"></span> Divulgación selectiva</span>
+    <span class="item"><span class="dot d-temporal"></span> Temporalidad</span>
+    <span class="item"><span class="dot d-revoca"></span> Revocabilidad</span>
+    <span class="item"><span class="dot d-neutro"></span> Lectura / utilidad</span>
+  </div>
+
+  <h2>1. Estado y estructura de datos</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="tope t-control">Variables de estado <span class="tag">Control del titular</span></div>
+<pre><span class="ty">address</span> <span class="kw">public</span> owner;            <span class="cm">// el titular (dueño) del dato</span>
+<span class="ty">string</span>  <span class="kw">private</span> personalData;   <span class="cm">// el dato protegido</span>
+<span class="ty">uint256</span> <span class="kw">public</span> defaultDuration; <span class="cm">// ventana por defecto (seg)</span></pre>
+      <div class="nota"><strong>owner</strong> es quien despliega. <strong>personalData</strong> es <code>private</code>, pero ojo: en la cadena pública el valor igual es visible. <strong>defaultDuration</strong> en el taller = <code>864000</code> (10 días).</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-selectiva">struct AccessGrant <span class="tag">Divulgación + Temporalidad</span></div>
+<pre><span class="kw">struct</span> <span class="ty">AccessGrant</span> {
+    <span class="ty">bool</span>    authorized; <span class="cm">// ¿tiene acceso?</span>
+    <span class="ty">uint256</span> grantedAt;  <span class="cm">// cuándo se otorgó</span>
+    <span class="ty">uint256</span> expiresAt;  <span class="cm">// cuándo expira</span>
+    <span class="ty">string</span>  purpose;    <span class="cm">// motivo del acceso</span>
+}
+<span class="ty">mapping</span>(<span class="ty">address</span> => <span class="ty">AccessGrant</span>) accessGrants;</pre>
+      <div class="nota">Por cada dirección autorizada se guarda su permiso: a <strong>quién</strong>, <strong>para qué</strong> y <strong>hasta cuándo</strong>.</div>
+    </div>
+  </div>
+
+  <h2>2. Modificadores (controles de seguridad)</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="tope t-control">onlyOwner <span class="tag">Control del titular</span></div>
+<pre><span class="kw">modifier</span> onlyOwner() {
+    <span class="kw">require</span>(msg.sender == owner,
+      <span class="st">"Solo el titular..."</span>);
+    _;
+}</pre>
+      <div class="nota">Solo el dueño ejecuta acciones sensibles (otorgar, revocar, rectificar).</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-temporal">hasValidAccess <span class="tag">Temporalidad</span></div>
+<pre><span class="kw">modifier</span> hasValidAccess() {
+    <span class="ty">AccessGrant</span> <span class="kw">memory</span> g = accessGrants[msg.sender];
+    <span class="kw">require</span>(g.authorized, <span class="st">"No tienes autorizacion"</span>);
+    <span class="kw">require</span>(block.timestamp &lt;= g.expiresAt,
+      <span class="st">"Tu acceso ha expirado"</span>);
+    _;
+}</pre>
+      <div class="nota">Deja leer el dato solo si la dirección está autorizada <strong>y</strong> el permiso no expiró.</div>
+    </div>
+  </div>
+
+  <h2>3. Funciones clave</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="tope t-control">constructor <span class="tag">Despliegue</span></div>
+<pre><span class="kw">constructor</span>(<span class="ty">string</span> _personalData, <span class="ty">uint256</span> _dur) {
+    owner = msg.sender;
+    personalData = _personalData;
+    defaultDuration = _dur; <span class="cm">// 864000 = 10 días</span>
+}</pre>
+      <div class="nota">Al desplegar, fija el dato y la duración por defecto.</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-selectiva">grantAccess <span class="tag">Divulgación selectiva</span></div>
+<pre><span class="kw">function</span> grantAccess(<span class="ty">address</span> _viewer, <span class="ty">string</span> _purpose)
+    <span class="kw">external</span> onlyOwner {
+    <span class="ty">uint256</span> expiry = block.timestamp + defaultDuration;
+    accessGrants[_viewer] =
+      <span class="ty">AccessGrant</span>(<span class="kw">true</span>, block.timestamp, expiry, _purpose);
+    <span class="kw">emit</span> AccessGranted(_viewer, expiry, _purpose);
+}</pre>
+      <div class="nota">Autoriza a una dirección por la duración por defecto (10 días) y emite el evento <code>AccessGranted</code>.</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-revoca">revokeAccess <span class="tag">Revocabilidad</span></div>
+<pre><span class="kw">function</span> revokeAccess(<span class="ty">address</span> _viewer, <span class="ty">string</span> _reason)
+    <span class="kw">external</span> onlyOwner {
+    accessGrants[_viewer].authorized = <span class="kw">false</span>;
+    accessGrants[_viewer].expiresAt = block.timestamp;
+    <span class="kw">emit</span> AccessRevoked(_viewer, _reason);
+}</pre>
+      <div class="nota">Corta el acceso de inmediato. El titular manda, en cualquier momento.</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-selectiva">viewData <span class="tag">Lectura protegida</span></div>
+<pre><span class="kw">function</span> viewData() <span class="kw">external</span> hasValidAccess
+    <span class="kw">returns</span> (<span class="ty">string</span>) {
+    <span class="kw">emit</span> DataAccessed(msg.sender, block.timestamp);
+    <span class="kw">return</span> personalData;
+}</pre>
+      <div class="nota">El verificador lee el dato solo con acceso vigente; queda traza con <code>DataAccessed</code>.</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-control">updatePersonalData <span class="tag">≈ Rectificación (ARCO)</span></div>
+<pre><span class="kw">function</span> updatePersonalData(<span class="ty">string</span> _newData)
+    <span class="kw">external</span> onlyOwner {
+    personalData = _newData;
+    <span class="kw">emit</span> DataUpdated(block.timestamp);
+}</pre>
+      <div class="nota">El titular rectifica su dato: análogo al derecho de rectificación de la Ley 8968.</div>
+    </div>
+
+    <div class="card">
+      <div class="tope t-neutro">Lecturas (sin gas) <span class="tag">Utilidad</span></div>
+<pre><span class="kw">function</span> hasAccess(<span class="ty">address</span> v) <span class="kw">view returns</span>(<span class="ty">bool</span>)
+<span class="kw">function</span> remainingTime(<span class="ty">address</span> v) <span class="kw">view returns</span>(<span class="ty">uint256</span>)
+<span class="kw">function</span> getAccessDetails(<span class="ty">address</span> v) <span class="kw">view</span> ...</pre>
+      <div class="nota">Consultas de solo lectura (botones azules en Remix): no abren MetaMask ni gastan gas.</div>
+    </div>
+  </div>
+
+  <h2>4. Ciclo de vida del acceso</h2>
+  <div class="flujo">
+    <div class="paso"><span class="n">1</span><h4>Deploy</h4><p>El titular crea el contrato con su dato y 10 días.</p></div>
+    <span class="flecha">→</span>
+    <div class="paso"><span class="n">2</span><h4>grantAccess</h4><p>Autoriza a un verificador (evento AccessGranted).</p></div>
+    <span class="flecha">→</span>
+    <div class="paso"><span class="n">3</span><h4>viewData</h4><p>El verificador lee el dato mientras esté vigente.</p></div>
+    <span class="flecha">→</span>
+    <div class="paso"><span class="n">4</span><h4>revoke / expira</h4><p>Se corta el acceso; viewData vuelve a fallar.</p></div>
+  </div>
+
+  <div class="leyenda" style="margin-top:18px">
+    <span class="item"><span class="dot d-control"></span> El titular controla todo el ciclo</span>
+    <span class="item"><span class="dot d-temporal"></span> El tiempo limita el acceso solo</span>
+    <span class="item"><span class="dot d-revoca"></span> La revocación es inmediata</span>
+  </div>
+</main>
+
+<footer>
+  Material docente CENFOTEC — CIB-205, Semana 4. Código: <code>github.com/alejoherrera/ssi-demo-sepolia</code> · contrato <code>contracts/SSIAccessControl.sol</code>.
+</footer>
+</body>
+</html>
